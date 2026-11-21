@@ -111,7 +111,7 @@ export const recipes: Recipe[] = [
   R('beef-mushroom-noodles', '牛肉蘑菇炒面', '菌菇和牛肉组成的快炒面。', 25, [I('beef', 250), I('mushroom', 200), I('noodles', 180), I('soy_sauce', 20), I('oil', 15)], ['面条煮熟，牛肉切薄片。', '牛肉炒熟后加入蘑菇炒软，再加面条和生抽炒匀。']),
   R('pork-cabbage-rice', '猪肉末圆白菜盖饭', '肉末配甜脆圆白菜。', 25, [I('pork_mince', 250), I('cabbage', 250), I('rice', 180), I('soy_sauce', 20), I('oil', 15)], ['米饭煮熟，圆白菜切丝。', '猪肉末炒至完全熟透，加入圆白菜和生抽炒软后盖饭。']),
   R('potato-beef-stew', '土豆胡萝卜炖牛肉', '一锅炖菜，适合留到第二顿。', 45, [I('potato', 350), I('beef', 300), I('carrot', 150), I('onion', 150), I('soy_sauce', 20), I('oil', 15)], ['牛肉、土豆和胡萝卜切小块，洋葱切丝。', '牛肉炒至表面变色，加入其余食材和水，炖至牛肉熟透、土豆软烂。']),
-  R('mapo-tofu', '麻婆豆腐饭', '豆瓣酱和花椒做出麻辣底味。', 25, [I('tofu', 300), I('pork_mince', 120), I('doubanjiang', 25), I('sichuan_pepper', 2), I('garlic', 10), I('rice', 180), I('oil', 15)], ['米饭煮熟，豆腐切块；花椒轻压碎。', '肉末炒至完全熟透，加入蒜和豆瓣酱炒香，加少量水与豆腐煮热，撒花椒后配饭。']),
+  { ...R('mapo-tofu', '麻婆豆腐饭', '豆瓣酱和花椒做出麻辣底味。', 25, [I('tofu', 300), I('pork_mince', 120), I('doubanjiang', 25), I('sichuan_pepper', 2), I('garlic', 10), I('rice', 180), I('oil', 15)], ['米饭煮熟，豆腐切块；花椒轻压碎。', '肉末炒至完全熟透，加入蒜和豆瓣酱炒香，加少量水与豆腐煮热，撒花椒后配饭。']), region: '四川' },
   R('garlic-shoot-pork-rice', '蒜苗肉末盖饭', '蒜苗的脆口和蒜香是主角。', 25, [I('garlic_shoots', 180), I('pork_mince', 250), I('rice', 180), I('soy_sauce', 15), I('oil', 15)], ['米饭煮熟，蒜苗切段。', '猪肉末炒至完全熟透，加入蒜苗炒断生、生抽调味后盖饭。']),
   R('chive-egg-rice', '韭菜炒蛋盖饭', '韭菜香味浓，鸡蛋柔软。', 20, [I('chinese_chives', 180), I('egg', 3), I('rice', 180), I('oil', 15)], ['米饭煮熟，韭菜洗净切段，鸡蛋打散。', '鸡蛋炒至半凝固，加入韭菜炒熟后配饭。']),
   R('zhacai-chicken-noodles', '榨菜鸡丝面', '榨菜带来咸脆口感。', 25, [I('zhacai', 70), I('chicken', 250), I('noodles', 180), I('soy_sauce', 10), I('oil', 10)], ['鸡肉切丝炒至完全熟透，榨菜视咸度冲洗并切丝。', '面条煮熟，加鸡丝、榨菜和少量生抽拌匀。']),

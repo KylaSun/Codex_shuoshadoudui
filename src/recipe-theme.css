@@ -1,0 +1,186 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --paper: #f8f4e9;
+  --ink: #2b241c;
+  --muted-ink: #766c5f;
+  --red: #a33d29;
+  --deep-red: #7c2d20;
+  --line: #e4d9c9;
+  --cream: #fffdf7;
+  font-family: 'DM Sans', 'Noto Sans SC', system-ui, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body { background: var(--paper); }
+button, input { font-family: inherit; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+.shell { max-width: 1200px; padding: 0 40px 115px; }
+.topbar { height: 88px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 26px; letter-spacing: -.03em; text-align: left; }
+.brandmark { margin: 0; width: 40px; height: 40px; border-radius: 11px; transform: none; background: var(--red); color: #fff9e7; font-size: 21px; font-weight: 800; box-shadow: 2px 3px 0 #e9d5b7; }
+.brand>span:last-child { display: flex; flex-direction: column; line-height: 1.05; }
+.brand small { color: var(--red); font-size: 8px; line-height: 1.5; letter-spacing: .2em; font-weight: 800; }
+.top-right { color: var(--muted-ink); font-size: 11px; letter-spacing: .06em; }
+.top-right .status-dot { margin: 0 0 1px 6px; background: var(--red); }
+
+.hero { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(300px,.9fr); min-height: 475px; margin-top: 24px; padding: 0; border-radius: 18px; background: #eee2cc; box-shadow: none; }
+.hero-copy { position: relative; z-index: 1; padding: 52px 36px 36px 53px; }
+.eyebrow, .overline { color: var(--red); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.hero h1 { margin: 31px 0 20px; font-size: clamp(49px, 5.2vw, 75px); line-height: 1.13; letter-spacing: -.035em; font-weight: 900; }
+.hero h1 span { color: var(--red); }
+.hero p { max-width: 410px; margin: 0; color: #62584c; font-size: 15px; line-height: 1.9; }
+.hero .search-box { max-width: 510px; margin-top: 29px; }
+.hero-visual { position: relative; min-height: 475px; background-image: url('../assets/regional-dishes.jpg'); background-size: 300% 200%; background-position: 0 0; }
+.hero-stamp { position: absolute; right: 22px; bottom: 22px; display: grid; place-items: center; width: 83px; height: 83px; padding: 14px; border-radius: 50%; background: var(--red); color: #fff7e6; font-size: 17px; line-height: 1.35; font-weight: 800; text-align: center; transform: rotate(10deg); box-shadow: 0 4px 20px #391b1850; }
+.search-box { gap: 8px; margin-top: 0; padding: 5px 5px 5px 17px; border: 1px solid #dfd2bd; border-radius: 10px; box-shadow: 0 5px 20px #4e321421; background: #fffdf8; }
+.search-icon { color: var(--red) !important; font-size: 25px !important; line-height: 1; }
+.search-box input { min-height: 43px; padding: 10px 0; font-size: 15px; color: var(--ink); }
+.search-box input::placeholder { color: #9a8d7d; }
+.search-box button, .primary { min-height: 44px; padding: 11px 20px; border-radius: 8px; background: var(--red); color: white; font-size: 14px; }
+.search-box button:hover, .primary:hover { background: var(--deep-red); }
+.hero-tip { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 16px; color: #736759; font-size: 12px; }
+.hero-tip button { border: 0; background: none; padding: 4px 5px; color: var(--red); font-size: 12px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+.quick-links { gap: 15px; margin: 20px 0 58px; }
+.quick { display: flex; min-height: 101px; align-items: center; gap: 18px; padding: 21px 23px; border: 0; border-radius: 12px; background: var(--cream); box-shadow: 0 1px 0 var(--line); transition: transform .18s ease, box-shadow .18s ease; }
+.quick:hover { transform: translateY(-2px); box-shadow: 0 7px 17px #54351b12; }
+.quick-number { flex: 0 0 auto; color: var(--red); font-family: Georgia, serif; font-size: 28px; font-style: italic; }
+.quick-content { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.quick strong { font-size: 17px; }
+.quick small { color: var(--muted-ink); font-size: 12px; }
+.quick .link-arrow { position: static; color: var(--red); font-size: 21px; }
+.section { margin-top: 46px; }
+.section-heading { align-items: end; margin-bottom: 19px; }
+.section-heading h2 { margin: 8px 0 0; color: var(--ink); font-size: 29px; letter-spacing: -.025em; }
+.text-button, .back { color: var(--red); }
+.region-section { margin-top: 0; }
+.region-list { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 10px; }
+.region-list button { display: flex; align-items: center; justify-content: space-between; min-height: 57px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: #fffaf0; color: var(--ink); font-size: 15px; font-weight: 750; text-align: left; }
+.region-list button:hover { background: #f2e5d0; border-color: #c69b7c; }
+.region-list span { color: var(--red); }
+
+.recipe-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.recipe-card { border: 0; border-radius: 12px; box-shadow: 0 1px 0 #d9cdbb; background: var(--cream); }
+.recipe-card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px #4f33231c; }
+.food-art { height: 185px; background-color: #e4cdb8; }
+.food-art--photo { background-image: url('../assets/regional-dishes.jpg'); background-size: 300% 200%; }
+.food-art--0 { background-position: 0 0; }
+.food-art--1 { background-position: 50% 0; }
+.food-art--2 { background-position: 100% 0; }
+.food-art--3 { background-position: 0 100%; }
+.food-art--4 { background-position: 50% 100%; }
+.food-art--5 { background-position: 100% 100%; }
+.food-art--type { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 20px; background: #ead4b7; color: #793c30; text-align: left; }
+.recipe-card:nth-child(4n+2) .food-art--type { background: #d9dfcd; color: #315f4c; }
+.recipe-card:nth-child(4n+3) .food-art--type { background: #e8d0c3; color: #813d32; }
+.recipe-card:nth-child(4n+4) .food-art--type { background: #e5dfcc; color: #695637; }
+.food-art-region { font-size: 11px !important; letter-spacing: .16em; font-weight: 800; filter: none !important; }
+.food-art-title { max-width: 100%; font-size: clamp(24px,2.5vw,38px) !important; line-height: 1.12; font-weight: 900; letter-spacing: -.03em; filter: none !important; }
+.food-art-seal { align-self: flex-end; border: 1px solid currentColor; padding: 4px 5px; font-size: 10px !important; font-weight: 800; line-height: 1; filter: none !important; }
+.recipe-body { gap: 4px; padding: 16px 17px 20px; }
+.recipe-region { color: var(--red); font-size: 11px; font-weight: 800; letter-spacing: .05em; }
+.recipe-body strong { margin-top: 3px; color: var(--ink); font-size: 19px; line-height: 1.3; }
+.en-name { color: #8a7f72; font-size: 11px; line-height: 1.4; }
+.meta { margin-top: 10px; color: #76695c; font-size: 11px; }
+.meta span { color: #b8a99b; }
+.card-arrow { color: var(--red); }
+.footer-note { color: #9b8e80; letter-spacing: .1em; }
+
+.bottom-nav { max-width: 1200px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); border: 1px solid var(--line); border-bottom: 0; border-radius: 14px 14px 0 0; background: #fffdf8f5; }
+.nav-button { gap: 5px; min-width: 70px; min-height: 44px; padding: 8px 14px 6px; color: #766e64; }
+.nav-indicator { width: 6px; height: 6px; border-radius: 50%; background: transparent; }
+.nav-button small { font-size: 12px; }
+.nav-button.active { background: #f4e4d1; color: var(--deep-red); }
+.nav-button.active .nav-indicator { background: var(--red); }
+
+.inner-page, .detail { padding-top: 35px; }
+.page-title { color: var(--ink); font-size: 43px; }
+.highlight { color: var(--red); }
+.filters { gap: 7px; }
+.chip { border-color: var(--line); color: #6f6154; }
+.chip.chosen { border-color: var(--red); background: var(--red); }
+.result-count { color: var(--muted-ink); }
+.result-count b { color: var(--red); }
+.ingredient-card, .ingredient-rows, .product, .budget-result { border-color: var(--line); background: var(--cream); }
+.ingredient-icon, .row-emoji { background: #f0e2cc; color: var(--red); font-size: 21px; font-weight: 800; }
+.row-emoji { font-size: 0; }
+.row-emoji::before { content: ''; width: 8px; height: 8px; border: 2px solid var(--red); border-radius: 50%; }
+.ingredient-card strong, .row-main strong { color: var(--ink); }
+.empty-state, .subtle-empty { border-color: #d1bca4; background: #fffaf0; }
+.empty-state>span { color: var(--red); font-size: 28px; letter-spacing: .25em; }
+.outline { border-color: #caa38d; color: var(--red); border-radius: 8px; }
+.detail-hero, .ingredient-banner { background: #eaddc8; border-radius: 13px; }
+.detail-hero .food-art { height: 255px; }
+.detail-heading h1 { color: var(--ink); }
+.detail-heading p, .desc, .ingredient-banner p { color: var(--muted-ink); }
+.tags span { background: #fff9ed; color: #674839; }
+.detail-section h2 { color: var(--ink); }
+.steps li { padding-left: 15px; border-color: var(--line); color: #564c41; }
+.steps li:before { display: none; }
+.sub-option { border-color: #ead9bd; background: #fcf3e3; color: #5f402d; }
+.sub-option.picked { border-color: var(--red); background: #f5e3d3; }
+.integration-note { border-color: #d3bca1; background: #fff6e7; color: #6d5746; }
+.product-bottom a, .reset-sub { color: var(--red); }
+.modal { border-radius: 15px; background: var(--cream); }
+.flavour { border-color: #e7c9a2; background: #fff2dc; }
+.toast { background: var(--deep-red); }
+
+@media(max-width:800px) {
+  .shell { padding: 0 22px 105px; }
+  .hero { grid-template-columns: minmax(0,1fr) 37%; min-height: 420px; }
+  .hero-copy { padding: 38px 25px 28px 32px; }
+  .hero h1 { font-size: 55px; }
+  .hero-visual { min-height: 420px; }
+  .region-list { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .recipe-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+@media(max-width:600px) {
+  .shell { padding: 0 16px 100px; }
+  .topbar { height: 69px; }
+  .brand { font-size: 22px; }
+  .brandmark { width: 34px; height: 34px; font-size: 18px; }
+  .top-right { max-width: 105px; font-size: 9px; text-align: right; line-height: 1.4; }
+  .hero { display: flex; flex-direction: column-reverse; min-height: 0; margin-top: 14px; border-radius: 13px; }
+  .hero-visual { min-height: 222px; background-size: 300% 200%; }
+  .hero-stamp { right: 15px; bottom: 14px; width: 65px; height: 65px; padding: 10px; font-size: 13px; }
+  .hero-copy { padding: 23px 20px 25px; }
+  .hero h1 { margin: 12px 0 10px; font-size: clamp(38px,10vw,52px); line-height: 1.14; }
+  .hero h1 br { display: initial; }
+  .hero p { font-size: 13px; line-height: 1.65; }
+  .hero .search-box { margin-top: 19px; }
+  .search-box { padding-left: 12px; }
+  .search-box input { font-size: 16px; }
+  .search-box button { padding: 10px 13px; }
+  .hero-tip { margin-top: 10px; }
+  .quick-links { gap: 9px; margin: 12px 0 42px; }
+  .quick { min-height: 85px; gap: 9px; padding: 13px 11px; }
+  .quick-number { font-size: 20px; }
+  .quick strong { font-size: 13px; }
+  .quick small { font-size: 10px; }
+  .quick .link-arrow { font-size: 15px; }
+  .section { margin-top: 37px; }
+  .region-section { margin-top: 0; }
+  .section-heading h2 { font-size: 24px; }
+  .region-list { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+  .region-list button { min-height: 46px; padding: 9px 10px; font-size: 13px; }
+  .recipe-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .food-art { height: 123px; }
+  .food-art--type { padding: 12px; }
+  .food-art-title { font-size: 23px !important; }
+  .recipe-body { padding: 11px 12px 15px; }
+  .recipe-region { font-size: 9px; }
+  .recipe-body strong { font-size: 15px; }
+  .en-name { min-height: 0; font-size: 10px; }
+  .meta { font-size: 10px; }
+  .card-arrow { right: 9px; bottom: 12px; }
+  .nav-button { min-width: 60px; }
+  .inner-page, .detail { padding-top: 25px; }
+  .page-title { font-size: 34px; }
+  .detail-hero { grid-template-columns: 1fr; }
+  .detail-hero .food-art { height: 210px; }
+}
+
+@media(prefers-reduced-motion:reduce) { .quick, .recipe-card { transition: none; } }
