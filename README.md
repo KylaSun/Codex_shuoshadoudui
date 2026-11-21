@@ -28,3 +28,7 @@ No `npm install` required. B's built-in catalog is loaded from `src/data/catalog
 `npm test` 包括 D 的增删改、重新加载持久化、失败处理、搜索与适配器集成测试，以及页面控制器流程测试。控制器测试模拟 DOM/FormData 边界，不代替真实浏览器的视觉与原生表单校验验收。`npm run build` 也会检查 D 模块的 JavaScript 语法。
 
 D 的文件和联调边界见 [INTEGRATION.md](INTEGRATION.md#d-模块本地自定义菜谱)。
+
+## 三道菜后的必看视频
+
+同一标签页每浏览三道不同菜谱，在离开第三道时显示必看视频 `assets/recipe-break.mp4`。完整播放后点击“已看完，继续找菜”解锁，之后重新累计；重复打开同一道菜不重复累计。sessionStorage 保留计数和待观看状态，刷新不会跳过，关闭标签页后重新开始。播放器不提供快进、倍速或关闭入口；切到后台暂停，加载失败可重试。此功能是前端比赛演示，不属于防篡改鉴权。

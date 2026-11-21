@@ -1,0 +1,4 @@
+.recipe-video-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(35,28,23,.78);display:grid;place-items:center;padding:20px;backdrop-filter:blur(7px)}
+.recipe-video-dialog{width:min(100%,560px);max-height:90dvh;overflow:auto;background:#fff8ee;border:1px solid #d9c5a9;border-radius:24px;padding:28px;box-shadow:0 24px 80px #0005;color:#45372d;outline:none}
+.recipe-video-label{color:#a75535;font-size:12px;letter-spacing:2px}.recipe-video-dialog h2{font-size:25px;margin:12px 0}.recipe-video-dialog p{line-height:1.7}.recipe-video-dialog video{display:block;width:100%;max-height:48dvh;background:#171411;border-radius:12px;object-fit:contain}.recipe-video-status{font-size:14px;color:#79634d;min-height:24px}.recipe-video-dialog button{width:100%}.recipe-video-dialog [hidden]{display:none!important}
+@media(max-width:480px){.recipe-video-backdrop{padding:14px}.recipe-video-dialog{padding:20px}.recipe-video-dialog h2{font-size:22px}}

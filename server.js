@@ -4,7 +4,7 @@ import {resolve, extname, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
-const types = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp'};
+const types = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4'};
 
 export function createAppServer() {
   return createServer(async (req, res) => {
@@ -26,7 +26,24 @@ export function createAppServer() {
       }
       if (!(await stat(path)).isFile()) { res.writeHead(404).end('Not found'); return; }
       const data = await readFile(path);
-      res.writeHead(200, {'content-type': types[extname(path)], 'cache-control': 'no-store', 'x-content-type-options': 'nosniff'});
+      const headers = {'content-type': types[extname(path)], 'cache-control': 'no-store', 'x-content-type-options': 'nosniff'};
+      if (extname(path) === '.mp4') {
+        headers['accept-ranges'] = 'bytes';
+        const range = req.headers.range;
+        if (range) {
+          const match = /^bytes=(\d*)-(\d*)$/.exec(range);
+          let start = match?.[1] ? Number(match[1]) : 0;
+          let end = match?.[2] ? Number(match[2]) : data.length - 1;
+          if (match && !match[1] && match[2]) { start = Math.max(0, data.length - Number(match[2])); end = data.length - 1; }
+          if (!match || (!match[1] && !match[2]) || start >= data.length || start > end) {
+            res.writeHead(416, {...headers, 'content-range': `bytes */${data.length}`}).end(); return;
+          }
+          end = Math.min(end, data.length - 1);
+          res.writeHead(206, {...headers, 'content-range': `bytes ${start}-${end}/${data.length}`, 'content-length': end - start + 1});
+          res.end(req.method === 'HEAD' ? undefined : data.subarray(start, end + 1)); return;
+        }
+      }
+      res.writeHead(200, {...headers, 'content-length': data.length});
       res.end(req.method === 'HEAD' ? undefined : data);
     } catch { res.writeHead(404).end('Not found'); }
   });
