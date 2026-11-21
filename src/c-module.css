@@ -5,16 +5,32 @@
 .c-close{position:absolute;top:14px;right:16px;border:0;background:none;color:inherit;font:inherit;font-size:28px;cursor:pointer}
 .c-editor-backdrop input,.c-editor-backdrop select{font:inherit;color:inherit;accent-color:#ae4933}
 .c-editor-backdrop input[type=number],.c-editor-backdrop select{min-height:42px;padding:8px 10px;border:1px solid #cdb9a6;border-radius:3px;background:#fffcf6}
+.c-editor-backdrop input[type=search]{width:100%;min-height:42px;padding:8px 10px;border:1px solid #cdb9a6;border-radius:3px;background:#fffcf6}
+.c-editor-backdrop input:focus-visible,.c-editor-backdrop select:focus-visible,.c-editor-backdrop button:focus-visible{outline:2px solid #a94a35;outline-offset:2px}
 .c-editor-backdrop input[type=number]{width:110px;max-width:100%}
 .c-add-pantry,.c-pantry-row,.c-shopping-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #dbc7b0}
 .c-pantry-rows,.c-shopping-rows{max-height:230px;overflow:auto;margin:18px 0}
 .c-pantry-row b,.c-shopping-row span{flex:1;min-width:0}
 .c-pantry-row button{border:0;background:none;color:#a94a35;cursor:pointer}
 .c-add-pantry{flex-wrap:wrap}
+.c-picker-label{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:100%;font-weight:700}
 .c-add-pantry label,.c-budget-label{display:flex;align-items:center;gap:8px}
+.c-add-pantry .c-picker-label{flex-direction:column;align-items:stretch}
+.c-blocked{margin:18px 0;padding:14px;border:1px solid #dbc7b0}
+.c-blocked legend{padding:0 6px;font-weight:700}
+.c-blocked p{margin:0 0 12px;color:#765d4b;font-size:13px;line-height:1.5}
+.c-blocked-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.c-blocked-list button{border:1px solid #b96a52;border-radius:3px;background:#f6e3d2;color:#713927;padding:6px 9px;cursor:pointer}
+.c-empty-inline{color:#765d4b;font-size:13px}
+.c-block-picker{display:flex;gap:8px;margin-top:10px}
+.c-block-picker select{min-width:0;flex:1}
+.c-block-picker button{flex:none}
 .c-recipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;max-height:190px;overflow:auto;margin:16px 0;padding:12px;border:1px solid #dbc7b0}
+.c-recipe-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-column:1/-1;gap:4px 16px}
 .c-recipes legend{padding:0 6px;font-weight:700}
 .c-recipes label{display:flex;align-items:start;gap:7px;font-size:14px;line-height:1.4;padding:4px 0;cursor:pointer}
+.c-recipes label small{display:block;color:#9b402e}
+.c-recipes .c-recipe-blocked{opacity:.65;cursor:not-allowed}
 .c-recipes input,.c-shopping-row input{flex:none;margin-top:3px}
 .c-random-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0}
 .c-random-controls label{display:flex;align-items:center;gap:8px}
@@ -25,4 +41,4 @@
 .c-shopping-row strong{white-space:nowrap}
 .c-total{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:2px solid #a94a35;font-size:18px}
 .c-editor-backdrop .modal-actions{flex-wrap:wrap}
-@media(max-width:600px){.c-editor-backdrop{padding:10px}.c-recipes{grid-template-columns:1fr}.c-add-pantry label{width:100%;justify-content:space-between}.c-add-pantry select{max-width:70%}.c-editor-backdrop .modal-actions>*{flex:1}}
+@media(max-width:760px){.c-editor-backdrop{padding:10px}.c-recipes,.c-recipe-options{grid-template-columns:1fr}.c-add-pantry label{width:100%;justify-content:space-between}.c-add-pantry .c-picker-label{align-items:stretch}.c-add-pantry select{max-width:70%}.c-block-picker select{max-width:none}.c-editor-backdrop .modal-actions>*{flex:1}}

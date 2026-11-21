@@ -6,19 +6,19 @@ Node.js 20.12+；在仓库根目录运行 `npm start`，打开 `http://127.0.0.1
 
 ## 加载顺序与数据
 
-`index.html` 依次加载 `src/team-adapters.js`、`src/c-adapter.js` 和 `src/main.js`。B 的 47 道菜、74 种食材、42 条商品及替代规则来自 `src/data/catalog.js`。B 适配器将 `quantity/minutes/packLabel/priceGbp` 等字段映射为 A 的字段，并保留 `packQuantity/packUnit/extraReplacements` 供 C 准确计价。`src/demo-data.js` 仅在 B 取数不可用时供 A 回退使用。
+`index.html` 依次加载 `src/team-adapters.js`、`src/c-adapter.js` 和 `src/main.js`。B 的 47 道菜、74 种食材、55 条商品及替代规则来自 `src/data/catalog.js`。B 适配器将 `quantity/minutes/packLabel/priceGbp` 等字段映射为 A 的字段，并保留 `packQuantity/packUnit/extraReplacements` 供 C 准确计价。`src/demo-data.js` 仅在 B 取数不可用时供 A 回退使用。
 
 C 的 `src/c-module.js` 来自 `feature/c-pantry-shopping` 的 `github-repo/src/c-module.js`，已适配 B 的标准单位和整包数量。`src/c-adapter.js` 注册厨房、购物单、预算、替代与推荐方法，并将 D 的本地自定义菜谱并入 C 可见的菜谱列表。D 仍由 `src/custom-recipes.js` 独立保存到浏览器 `localStorage`。
 
 ## C 的网页流程
 
-- “我的厨房”可添加、修改和移除已有食材数量。数据仅保存在当前浏览器。
+- “我的厨房”可搜索添加、修改和移除已有食材数量，也可搜索并屏蔽食材。含屏蔽食材的菜不会加入购物单或随机推荐。数据仅保存在当前浏览器。
 - 菜谱详情显示扣除已有食材后的整包参考价。缺商品时显示缺口和“无法估算完整金额”，不把未知金额当零。
-- “购物单”可选菜、调整预算、排除单项、查看整包数与参考价。缺匹配商品的食材仍可留在清单中，金额明确标为不完整。
+- “购物单”可搜索选菜、调整预算、排除单项、查看整包数与参考价。缺匹配商品的食材仍可留在清单中，金额明确标为不完整。
 - 超出已匹配商品的预算时，需调整清单或明确提高预算后保存。随机推荐只选商品匹配完整且在预算内的菜；重抽前要求选择原因。
 - 替代品需先确认味道变化。C 计价包含组合替代的所有额外食材，选择持久化在当前浏览器。
 
-商品价格是人工记录的参考值，不是实时售价或库存。商品页链接仅用于核对。当前仅 12/47 道内置菜有完整示例商品覆盖；其余缺口见 [C_HANDOFF.md](C_HANDOFF.md)。
+商品价格是人工记录的参考值，不是实时售价或库存。商品页链接仅用于核对。当前 24/47 道内置菜有完整示例商品覆盖；其余缺口见 [C_HANDOFF.md](C_HANDOFF.md)。
 
 ## D 的本地菜谱
 

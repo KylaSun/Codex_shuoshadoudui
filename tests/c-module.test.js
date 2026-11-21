@@ -25,3 +25,16 @@ test('unmatched products are reported rather than assigned invented prices',()=>
 test('budget random recommendation filters unmatched and over-budget meals',()=>{const {c}=fixture();const result=c.recommendWithinBudget({budgetGBP:3.5,random:()=>0});assert.equal(result.ok,true);assert.equal(result.recipe.id,'rice-bowl');const none=c.recommendWithinBudget({budgetGBP:0});assert.equal(none.ok,false);assert.equal(none.reason,'no-recipe-within-budget');});
 
 test('fully stocked ingredients are omitted from the purchase list',()=>{const {c}=fixture();c.setRecipeIds(['rice-bowl']);c.setPantryQuantity('egg',2,'个');assert.equal(c.getShoppingList().some(x=>x.ingredientId==='egg'),false);});
+
+test('blocked ingredients persist and exclude affected recipes from planning and recommendations',()=>{
+  const {c,storage}=fixture();
+  c.setRecipeIds(['rice-bowl','pasta']);
+  assert.deepEqual(c.setBlockedIngredientIds(['egg','egg','unknown']),['egg']);
+  assert.deepEqual(c.getBlockedIngredientIds(),['egg']);
+  assert.deepEqual(c.getShoppingList().map(x=>x.ingredientId),['pasta','cheese']);
+  assert.deepEqual(c.setRecipeIds(['rice-bowl','pasta']),['pasta']);
+  assert.equal(c.recommendWithinBudget({budgetGBP:10,random:()=>0}).recipe.id,'pasta');
+  assert.deepEqual(fixture(storage).c.getBlockedIngredientIds(),['egg']);
+  c.setBlockedIngredientIds([]);
+  assert.deepEqual(c.setRecipeIds(['rice-bowl']),['rice-bowl']);
+});

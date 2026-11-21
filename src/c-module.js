@@ -24,14 +24,17 @@ function convertBase(value,unit){const info=unitInfo(unit);return info?value/inf
 
 export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProducts=()=>[],getSubstitutions=()=>[],storage=globalThis.localStorage,documentRef=globalThis.document,dispatch=()=>{}}={}){
   let saved={};try{saved=JSON.parse(storage?.getItem(STORAGE_KEY)||'{}')||{};}catch{}
-  const state={pantry:Array.isArray(saved.pantry)?saved.pantry:[],recipeIds:Array.isArray(saved.recipeIds)?saved.recipeIds:[],budgetGBP:Number.isFinite(Number(saved.budgetGBP))?Number(saved.budgetGBP):5,excluded:Array.isArray(saved.excluded)?saved.excluded:[],substitutions:saved.substitutions&&typeof saved.substitutions==='object'?saved.substitutions:{},lastRecommendationId:null,lastRerollReason:null};
+  const state={pantry:Array.isArray(saved.pantry)?saved.pantry:[],recipeIds:Array.isArray(saved.recipeIds)?saved.recipeIds:[],blockedIngredients:Array.isArray(saved.blockedIngredients)?saved.blockedIngredients:[],budgetGBP:Number.isFinite(Number(saved.budgetGBP))?Number(saved.budgetGBP):5,excluded:Array.isArray(saved.excluded)?saved.excluded:[],substitutions:saved.substitutions&&typeof saved.substitutions==='object'?saved.substitutions:{},lastRecommendationId:null,lastRerollReason:null};
   const recipes=()=>{try{return getRecipes()||[]}catch{return []}};
   const ingredients=()=>{try{return getIngredients()||[]}catch{return []}};
   const products=()=>{try{return getProducts()||[]}catch{return []}};
   const substitutionRules=()=>{try{return getSubstitutions()||[]}catch{return []}};
-  const persist=()=>{try{storage?.setItem(STORAGE_KEY,JSON.stringify({pantry:state.pantry,recipeIds:state.recipeIds,budgetGBP:state.budgetGBP,excluded:state.excluded,substitutions:state.substitutions}));}catch{};dispatch();};
+  const persist=()=>{try{storage?.setItem(STORAGE_KEY,JSON.stringify({pantry:state.pantry,recipeIds:state.recipeIds,blockedIngredients:state.blockedIngredients,budgetGBP:state.budgetGBP,excluded:state.excluded,substitutions:state.substitutions}));}catch{};dispatch();};
   const ingredientName=id=>ingredients().find(i=>i.id===id)?.nameZh||ingredients().find(i=>i.id===id)?.nameEn||id;
   const defaultUnit=id=>{for(const recipe of recipes()){const row=(recipe.ingredients||[]).find(x=>x.ingredientId===id);if(row)return row.unit;}return 'g';};
+  const hasBlockedIngredient=(recipe,blocked=state.blockedIngredients)=>Boolean(recipe?.ingredients?.some(row=>blocked.includes(row.ingredientId)));
+  const getBlockedIngredientIds=()=>[...state.blockedIngredients];
+  function setBlockedIngredientIds(ids){state.blockedIngredients=[...new Set(ids.filter(id=>ingredients().some(i=>i.id===id)))];state.recipeIds=state.recipeIds.filter(id=>!hasBlockedIngredient(recipes().find(r=>r.id===id)));persist();return getBlockedIngredientIds();}
   function useSubstitutions(passed={}){return {...state.substitutions,...(passed&&typeof passed==='object'?passed:{})};}
   function calculate(recipeIds=state.recipeIds,selectedSubstitutions={},omitted=state.excluded){
     const selected=useSubstitutions(selectedSubstitutions),needs=new Map();
@@ -73,7 +76,7 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     if(Number.isFinite(quantity)&&quantity>0)state.pantry.push({ingredientId,amount:quantity,unit});persist();return getPantry();
   }
   function getBudgetSummary(recipeId,selectedSubs={}){const rows=calculate([recipeId],selectedSubs);const missing=rows.filter(x=>x.unmatched).map(x=>x.nameZh);if(missing.length)return {totalGBP:Number.NaN,label:`${missing.join('、')}暂无匹配商品，无法估算完整采购金额`};return {totalGBP:sum(rows),label:'已扣除已有食材，按整包参考价估算'};}
-  function recommendWithinBudget({budgetGBP=state.budgetGBP,excludeRecipeIds=[],random=Math.random}={}){const options=recipes().map(recipe=>({recipe,items:calculate([recipe.id],state.substitutions,[])})).map(x=>({...x,costGBP:sum(x.items),unmatched:x.items.some(item=>item.unmatched)}));const feasible=options.filter(x=>!x.unmatched&&x.costGBP<=Number(budgetGBP)&&!excludeRecipeIds.includes(x.recipe.id));if(!feasible.length){const closest=options.filter(x=>!x.unmatched).sort((a,b)=>a.costGBP-b.costGBP)[0]||null;return {ok:false,reason:'no-recipe-within-budget',budgetGBP:Number(budgetGBP),closest:closest?{recipe:closest.recipe,costGBP:closest.costGBP}:null};}const result=feasible[Math.min(feasible.length-1,Math.floor(Math.max(0,Math.min(.999999,random()))*feasible.length))];return {ok:true,...result};}
+  function recommendWithinBudget({budgetGBP=state.budgetGBP,excludeRecipeIds=[],random=Math.random}={}){const options=recipes().filter(recipe=>!hasBlockedIngredient(recipe)).map(recipe=>({recipe,items:calculate([recipe.id],state.substitutions,[])})).map(x=>({...x,costGBP:sum(x.items),unmatched:x.items.some(item=>item.unmatched)}));const feasible=options.filter(x=>!x.unmatched&&x.costGBP<=Number(budgetGBP)&&!excludeRecipeIds.includes(x.recipe.id));if(!feasible.length){const closest=options.filter(x=>!x.unmatched).sort((a,b)=>a.costGBP-b.costGBP)[0]||null;return {ok:false,reason:'no-recipe-within-budget',budgetGBP:Number(budgetGBP),closest:closest?{recipe:closest.recipe,costGBP:closest.costGBP}:null};}const result=feasible[Math.min(feasible.length-1,Math.floor(Math.max(0,Math.min(.999999,random()))*feasible.length))];return {ok:true,...result};}
   function getShoppingList(){return calculate().filter(row=>row.needed>0||row.unmatched).map(row=>({ingredientId:row.ingredientId,nameZh:row.nameZh,amount:row.needed,unit:row.unit,haveAmount:row.have,requiredAmount:row.amount,product:row.product,packageCount:row.packageCount,costGBP:row.costGBP,unmatched:row.unmatched}));}
   function selectSubstitution({recipeId,ingredientId,substitutionId,flavourConfirmed}={}){
     const key=selectionKey(recipeId,ingredientId);if(substitutionId===null){delete state.substitutions[key];persist();return true;}
@@ -81,18 +84,224 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     const exists=substitutionRules().some(s=>s.id===substitutionId&&s.recipeId===recipeId&&s.ingredientId===ingredientId);if(!exists)return false;
     state.substitutions[key]=substitutionId;persist();return true;
   }
-  function setRecipeIds(ids){state.recipeIds=[...new Set(ids.filter(id=>recipes().some(r=>r.id===id)))];state.excluded=[];persist();return [...state.recipeIds];}
+  function setRecipeIds(ids){state.recipeIds=[...new Set(ids.filter(id=>recipes().some(r=>r.id===id&&!hasBlockedIngredient(r))))];state.excluded=[];persist();return [...state.recipeIds];}
   function setBudgetGBP(value){const n=Number(value);if(!Number.isFinite(n)||n<0)return false;state.budgetGBP=n;persist();return true;}
-  function openEditor(kind){if(!documentRef?.body)return false;documentRef.querySelector('.c-editor-backdrop')?.remove();const overlay=documentRef.createElement('div');overlay.className='modal-backdrop c-editor-backdrop';overlay.setAttribute('role','presentation');documentRef.body.append(overlay);let draftPantry=getPantry(),draftIds=[...state.recipeIds],draftExcluded=new Set(state.excluded),draftBudget=state.budgetGBP,rerollOpen=false,rerollReason='',drawMessage='';
-    const close=()=>overlay.remove();const pantryEditor=()=>`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><div class="modal-icon">${icon("pantry","modal-paint")}</div><h2 id="c-editor-title">管理我的厨房</h2><p>库存数量按菜谱食材单位记录，只保存在这个浏览器。</p><div class="c-pantry-rows">${draftPantry.length?draftPantry.map((x,n)=>`<div class="c-pantry-row"><b>${esc(ingredientName(x.ingredientId))}</b><input aria-label="${esc(ingredientName(x.ingredientId))} 库存数量" type="number" min="0" step="any" data-pantry-index="${n}" value="${esc(x.amount)}"><span>${esc(x.unit)}</span><button type="button" data-pantry-remove="${n}" aria-label="移除 ${esc(ingredientName(x.ingredientId))}">移除</button></div>`).join(''):'<p class="subtle-empty">还没有记录库存。</p>'}</div><form id="c-add-pantry" class="c-add-pantry"><label>添加食材<select name="ingredientId">${ingredients().map(i=>`<option value="${esc(i.id)}">${esc(i.nameZh||i.nameEn||i.id)}</option>`).join('')}</select></label><label>数量<input name="amount" type="number" min="0.01" step="any" required></label><span class="c-unit" id="c-pantry-unit">${esc(defaultUnit(ingredients()[0]?.id))}</span><button class="outline" type="submit">加入库存</button></form><div class="modal-actions"><button type="button" data-close class="outline">取消</button><button type="button" data-save-pantry class="primary">保存库存</button></div></div>`;
-    const shoppingRows=()=>calculate(draftIds,state.substitutions,[]).filter(row=>row.needed>0||row.unmatched).map(x=>({...x,excluded:draftExcluded.has(itemKey(x.ingredientId,x.unit))}));
-    const shoppingEditor=()=>{const rows=shoppingRows(),total=sum(rows.filter(x=>!x.excluded));const over=total>draftBudget;return `<div class="modal c-shopping-modal" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><div class="modal-icon">${icon("shopping","modal-paint")}</div><h2 id="c-editor-title">编辑今晚购物单</h2><p>勾选要加入清单的菜；取消单项可以调整采购内容。金额按整包参考价计算。</p><fieldset class="c-recipes"><legend>今晚要做的菜</legend>${recipes().map(r=>`<label><input type="checkbox" data-plan-recipe="${esc(r.id)}" ${draftIds.includes(r.id)?'checked':''}> ${esc(r.nameZh||r.nameEn||r.id)}</label>`).join('')}</fieldset><div class="c-random-controls"><button type="button" data-random-recommend class="outline">预算随机推荐一道</button>${rerollOpen?`<label>重抽原因<select data-reroll-reason><option value="">请选择</option>${['不想吃这道菜','缺少关键食材','想换一种口味','其他'].map(x=>`<option ${rerollReason===x?'selected':''} value="${esc(x)}">${esc(x)}</option>`).join('')}</select></label><button type="button" data-confirm-reroll class="secondary">确认原因并重抽</button>`:''}<p class="c-random-message" role="status">${esc(drawMessage)}</p></div><label class="c-budget-label">预算 (£)<input id="c-budget-input" type="number" min="0" step="0.01" value="${draftBudget.toFixed(2)}"></label><div class="c-shopping-rows">${rows.length?rows.map((x,n)=>`<label class="c-shopping-row"><input type="checkbox" data-shopping-item="${esc(itemKey(x.ingredientId,x.unit))}" ${x.excluded?'':'checked'}><span><b>${esc(x.nameZh)}</b><small>需购 ${esc(x.needed)} ${esc(x.unit)}${x.product?` · ${esc(x.product.supermarket)} 整包 × ${esc(x.packageCount)}`:' · 无匹配商品'}</small></span><strong>${x.costGBP===null?'—':'£'+x.costGBP.toFixed(2)}</strong></label>`).join(''):'<p class="subtle-empty">先选择一道菜，购物项会自动生成。</p>'}</div><div class="c-total"><span>已匹配商品参考价</span><strong>£${total.toFixed(2)}</strong></div><div class="c-budget-message" role="status">${rows.some(x=>x.unmatched&&!x.excluded)?'至少一项没有匹配的示例商品。':over?'超过当前预算；请调整菜品/购物项，或明确提高预算。':''}</div><div class="modal-actions">${over?`<button type="button" data-raise-budget class="outline">明确提高至 £${total.toFixed(2)}</button>`:''}<button type="button" data-close class="outline">取消</button><button type="button" data-save-shopping class="primary" ${over?'disabled':''}>保存购物单</button></div></div>`;};
-    const paint=()=>{overlay.innerHTML=kind==='pantry'?pantryEditor():shoppingEditor();};paint();
-    overlay.addEventListener('change',ev=>{const t=ev.target;if(t.matches('[data-pantry-index]')){const idx=Number(t.dataset.pantryIndex);draftPantry[idx]={...draftPantry[idx],amount:Math.max(0,Number(t.value)||0)};}if(t.matches('[data-reroll-reason]')){rerollReason=t.value;}if(t.matches('[data-plan-recipe]')){draftIds=t.checked?[...new Set([...draftIds,t.dataset.planRecipe])]:draftIds.filter(id=>id!==t.dataset.planRecipe);paint();}if(t.matches('[data-shopping-item]')){if(t.checked)draftExcluded.delete(t.dataset.shoppingItem);else draftExcluded.add(t.dataset.shoppingItem);paint();}if(t.id==='c-budget-input'){draftBudget=Math.max(0,Number(t.value)||0);paint();}});
-    overlay.addEventListener('input',ev=>{if(ev.target.matches('[data-pantry-index]')){const idx=Number(ev.target.dataset.pantryIndex);draftPantry[idx]={...draftPantry[idx],amount:Math.max(0,Number(ev.target.value)||0)};}});
-    overlay.addEventListener('submit',ev=>{if(ev.target.id!=='c-add-pantry')return;ev.preventDefault();const fd=new FormData(ev.target),id=String(fd.get('ingredientId')),amount=Number(fd.get('amount')),unit=defaultUnit(id);if(amount>0){const ix=draftPantry.findIndex(x=>x.ingredientId===id);if(ix>=0)draftPantry[ix]={ingredientId:id,amount:draftPantry[ix].amount+amount,unit};else draftPantry.push({ingredientId:id,amount,unit});paint();}});
-    overlay.addEventListener('click',ev=>{const button=ev.target.closest('button');if(!button)return;if(button.hasAttribute('data-close')){close();return;}if(button.hasAttribute('data-random-recommend')){if(state.lastRecommendationId){rerollOpen=true;drawMessage='重抽前请先选择一个原因。';paint();return;}const result=recommendWithinBudget({budgetGBP:draftBudget});if(!result.ok){drawMessage=result.closest?`预算内没有符合的菜；最低可匹配估算 £${result.closest.costGBP.toFixed(2)}。`:'当前菜谱暂无完整商品匹配，无法随机推荐。';paint();return;}state.lastRecommendationId=result.recipe.id;draftIds=[...new Set([...draftIds,result.recipe.id])];drawMessage=`已推荐：${result.recipe.nameZh||result.recipe.nameEn} · £${result.costGBP.toFixed(2)}`;paint();return;}if(button.hasAttribute('data-confirm-reroll')){if(!rerollReason){drawMessage='请先选择重抽原因。';paint();return;}const result=recommendWithinBudget({budgetGBP:draftBudget,excludeRecipeIds:[state.lastRecommendationId]});if(!result.ok){drawMessage=result.closest?`没有其他菜符合预算；最低可匹配估算 £${result.closest.costGBP.toFixed(2)}。`:'没有其他菜可匹配预算和商品。';paint();return;}state.lastRerollReason=rerollReason;state.lastRecommendationId=result.recipe.id;draftIds=[...new Set([...draftIds,result.recipe.id])];drawMessage=`已按“${rerollReason}”重抽：${result.recipe.nameZh||result.recipe.nameEn} · £${result.costGBP.toFixed(2)}`;rerollOpen=false;rerollReason='';paint();return;}if(button.hasAttribute('data-pantry-remove')){draftPantry.splice(Number(button.dataset.pantryRemove),1);paint();return;}if(button.hasAttribute('data-save-pantry')){state.pantry=draftPantry.filter(x=>Number(x.amount)>0);persist();close();return;}if(button.hasAttribute('data-raise-budget')){const rows=shoppingRows().filter(x=>!x.excluded);draftBudget=sum(rows);state.budgetGBP=draftBudget;persist();paint();return;}if(button.hasAttribute('data-save-shopping')){const rows=shoppingRows().filter(x=>!x.excluded);const total=sum(rows);if(total>draftBudget){const msg=overlay.querySelector('.c-budget-message');if(msg)msg.textContent='请先调整购物单或明确提高预算。';return;}state.recipeIds=[...draftIds];state.excluded=[...draftExcluded];state.budgetGBP=draftBudget;persist();close();return;}});
-    overlay.addEventListener('keydown',ev=>{if(ev.key==='Escape')close();});overlay.addEventListener('click',ev=>{if(ev.target===overlay)close();});return true;
+  function openEditor(kind) {
+    if (!documentRef?.body) return false;
+    documentRef.querySelector('.c-editor-backdrop')?.remove();
+    const overlay = documentRef.createElement('div');
+    overlay.className = 'modal-backdrop c-editor-backdrop';
+    overlay.setAttribute('role', 'presentation');
+    documentRef.body.append(overlay);
+
+    let draftPantry = getPantry();
+    let draftIds = [...state.recipeIds];
+    let draftBlocked = getBlockedIngredientIds();
+    let draftExcluded = new Set(state.excluded);
+    let draftBudget = state.budgetGBP;
+    let pantrySearch = '';
+    let blockSearch = '';
+    let recipeSearch = '';
+    let rerollOpen = false;
+    let rerollReason = '';
+    let drawMessage = '';
+
+    const close = () => overlay.remove();
+    const matches = (item, query) => {
+      const term = query.trim().toLocaleLowerCase();
+      return !term || [item.nameZh, item.nameEn, item.region, ...(item.aliases || [])]
+        .some(value => String(value || '').toLocaleLowerCase().includes(term));
+    };
+    const ingredientOptions = (query, excluded = []) => ingredients()
+      .filter(item => !excluded.includes(item.id) && matches(item, query))
+      .map(item => `<option value="${esc(item.id)}">${esc(item.nameZh || item.nameEn || item.id)}</option>`).join('');
+    const pantryEditor = () => `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="c-editor-title">
+      <button type="button" data-close class="c-close" aria-label="关闭">×</button>
+      <div class="modal-icon">${icon('pantry', 'modal-paint')}</div>
+      <h2 id="c-editor-title">管理我的厨房</h2>
+      <p>记录已有食材，屏蔽不想吃的食材。设置只保存在这个浏览器。</p>
+      <div class="c-pantry-rows">${draftPantry.length ? draftPantry.map((row, index) => `<div class="c-pantry-row"><b>${esc(ingredientName(row.ingredientId))}</b><input aria-label="${esc(ingredientName(row.ingredientId))} 数量" type="number" min="0" step="any" data-pantry-index="${index}" value="${esc(row.amount)}"><span>${esc(row.unit)}</span><button type="button" data-pantry-remove="${index}" aria-label="移除 ${esc(ingredientName(row.ingredientId))}">移除</button></div>`).join('') : '<p class="subtle-empty">还没有记录食材。</p>'}</div>
+      <form id="c-add-pantry" class="c-add-pantry">
+        <label class="c-picker-label">搜索要添加的食材<input type="search" data-pantry-search value="${esc(pantrySearch)}" placeholder="输入中文、英文或别名" autocomplete="off"></label>
+        <label>选择食材<select name="ingredientId" required>${ingredientOptions(pantrySearch)}</select></label>
+        <label>数量<input name="amount" type="number" min="0.01" step="any" required></label>
+        <span class="c-unit" id="c-pantry-unit"></span>
+        <button class="outline" type="submit">加入厨房</button>
+      </form>
+      <fieldset class="c-blocked"><legend>屏蔽食材</legend>
+        <p>含屏蔽食材的菜不会加入今晚购物单，也不会参与随机推荐。</p>
+        <div class="c-blocked-list">${draftBlocked.length ? draftBlocked.map(id => `<button type="button" data-block-remove="${esc(id)}" aria-label="取消屏蔽 ${esc(ingredientName(id))}">${esc(ingredientName(id))} <span aria-hidden="true">×</span></button>`).join('') : '<span class="c-empty-inline">尚未屏蔽食材</span>'}</div>
+        <label class="c-picker-label">搜索要屏蔽的食材<input type="search" data-block-search value="${esc(blockSearch)}" placeholder="输入中文、英文或别名" autocomplete="off"></label>
+        <div class="c-block-picker"><select data-block-select aria-label="选择要屏蔽的食材">${ingredientOptions(blockSearch, draftBlocked)}</select><button type="button" data-block-add class="outline">屏蔽所选</button></div>
+      </fieldset>
+      <div class="modal-actions"><button type="button" data-close class="outline">取消</button><button type="button" data-save-pantry class="primary">保存厨房</button></div>
+    </div>`;
+    const shoppingRows = () => calculate(draftIds, state.substitutions, [])
+      .filter(row => row.needed > 0 || row.unmatched)
+      .map(row => ({...row, excluded: draftExcluded.has(itemKey(row.ingredientId, row.unit))}));
+    const recipeOptions = () => recipes().filter(recipe => matches(recipe, recipeSearch) || (recipe.ingredients || []).some(row => matches(ingredients().find(item => item.id === row.ingredientId) || {}, recipeSearch))).map(recipe => {
+      const blocked = hasBlockedIngredient(recipe);
+      return `<label class="${blocked ? 'c-recipe-blocked' : ''}"><input type="checkbox" data-plan-recipe="${esc(recipe.id)}" ${draftIds.includes(recipe.id) ? 'checked' : ''} ${blocked ? 'disabled' : ''}><span>${esc(recipe.nameZh || recipe.nameEn || recipe.id)}${blocked ? '<small>含屏蔽食材</small>' : ''}</span></label>`;
+    }).join('') || '<p class="subtle-empty">没有找到菜谱。</p>';
+    const shoppingEditor = () => {
+      const rows = shoppingRows();
+      const total = sum(rows.filter(row => !row.excluded));
+      const over = total > draftBudget;
+      return `<div class="modal c-shopping-modal" role="dialog" aria-modal="true" aria-labelledby="c-editor-title">
+        <button type="button" data-close class="c-close" aria-label="关闭">×</button>
+        <div class="modal-icon">${icon('shopping', 'modal-paint')}</div>
+        <h2 id="c-editor-title">编辑今晚购物单</h2>
+        <p>勾选要加入清单的菜；取消单项可以调整采购内容。金额按整包参考价计算。</p>
+        <label class="c-picker-label">搜索今晚要做的菜<input type="search" data-recipe-search value="${esc(recipeSearch)}" placeholder="搜索菜名、地区或食材" autocomplete="off"></label>
+        <fieldset class="c-recipes"><legend>今晚要做的菜</legend><div class="c-recipe-options">
+          ${recipeOptions()}
+        </div>
+        </fieldset>
+        <div class="c-random-controls"><button type="button" data-random-recommend class="outline">预算随机推荐一道</button>
+          ${rerollOpen ? `<label>重抽原因<select data-reroll-reason><option value="">请选择</option>${['不想吃这道菜', '缺少关键食材', '想换一种口味', '其他'].map(value => `<option ${rerollReason === value ? 'selected' : ''} value="${esc(value)}">${esc(value)}</option>`).join('')}</select></label><button type="button" data-confirm-reroll class="secondary">确认原因并重抽</button>` : ''}
+          <p class="c-random-message" role="status">${esc(drawMessage)}</p>
+        </div>
+        <label class="c-budget-label">预算 (£)<input id="c-budget-input" type="number" min="0" step="0.01" value="${draftBudget.toFixed(2)}"></label>
+        <div class="c-shopping-rows">${rows.length ? rows.map(row => `<label class="c-shopping-row"><input type="checkbox" data-shopping-item="${esc(itemKey(row.ingredientId, row.unit))}" ${row.excluded ? '' : 'checked'}><span><b>${esc(row.nameZh)}</b><small>需购 ${esc(row.needed)} ${esc(row.unit)}${row.product ? ` · ${esc(row.product.supermarket)} 整包 × ${esc(row.packageCount)}` : ' · 无匹配商品'}</small></span><strong>${row.costGBP === null ? '—' : '£' + row.costGBP.toFixed(2)}</strong></label>`).join('') : '<p class="subtle-empty">先选择一道菜，购物项会自动生成。</p>'}</div>
+        <div class="c-total"><span>已匹配商品参考价</span><strong>£${total.toFixed(2)}</strong></div>
+        <div class="c-budget-message" role="status">${rows.some(row => row.unmatched && !row.excluded) ? '至少一项没有匹配的示例商品。' : over ? '超过当前预算；请调整菜品/购物项，或明确提高预算。' : ''}</div>
+        <div class="modal-actions">${over ? `<button type="button" data-raise-budget class="outline">明确提高至 £${total.toFixed(2)}</button>` : ''}<button type="button" data-close class="outline">取消</button><button type="button" data-save-shopping class="primary" ${over ? 'disabled' : ''}>保存购物单</button></div>
+      </div>`;
+    };
+    const updateUnit = () => {
+      const select = overlay.querySelector('[name="ingredientId"]');
+      const unit = overlay.querySelector('#c-pantry-unit');
+      if (unit) unit.textContent = select?.value ? defaultUnit(select.value) : '';
+    };
+    const paint = () => {
+      overlay.innerHTML = kind === 'pantry' ? pantryEditor() : shoppingEditor();
+      updateUnit();
+    };
+    paint();
+
+    overlay.addEventListener('input', event => {
+      const target = event.target;
+      if (target.matches('[data-pantry-index]')) {
+        const index = Number(target.dataset.pantryIndex);
+        draftPantry[index] = {...draftPantry[index], amount: Math.max(0, Number(target.value) || 0)};
+      }
+      if (target.matches('[data-pantry-search]')) {
+        pantrySearch = target.value;
+        const select = overlay.querySelector('[name="ingredientId"]');
+        select.innerHTML = ingredientOptions(pantrySearch);
+        updateUnit();
+      }
+      if (target.matches('[data-block-search]')) {
+        blockSearch = target.value;
+        overlay.querySelector('[data-block-select]').innerHTML = ingredientOptions(blockSearch, draftBlocked);
+      }
+      if (target.matches('[data-recipe-search]')) {
+        recipeSearch = target.value;
+        overlay.querySelector('.c-recipe-options').innerHTML = recipeOptions();
+        overlay.querySelector('.c-recipes').scrollTop = 0;
+      }
+    });
+    overlay.addEventListener('change', event => {
+      const target = event.target;
+      if (target.matches('[name="ingredientId"]')) updateUnit();
+      if (target.matches('[data-reroll-reason]')) rerollReason = target.value;
+      if (target.matches('[data-plan-recipe]')) {
+        draftIds = target.checked ? [...new Set([...draftIds, target.dataset.planRecipe])] : draftIds.filter(id => id !== target.dataset.planRecipe);
+        paint();
+      }
+      if (target.matches('[data-shopping-item]')) {
+        if (target.checked) draftExcluded.delete(target.dataset.shoppingItem);
+        else draftExcluded.add(target.dataset.shoppingItem);
+        paint();
+      }
+      if (target.id === 'c-budget-input') {
+        draftBudget = Math.max(0, Number(target.value) || 0);
+        paint();
+      }
+    });
+    overlay.addEventListener('submit', event => {
+      if (event.target.id !== 'c-add-pantry') return;
+      event.preventDefault();
+      const form = event.target;
+      const id = form.elements.ingredientId.value;
+      const amount = Number(form.elements.amount.value);
+      if (!id || !Number.isFinite(amount) || amount <= 0) return;
+      const unit = defaultUnit(id);
+      const index = draftPantry.findIndex(row => row.ingredientId === id);
+      if (index >= 0) draftPantry[index] = {ingredientId: id, amount: Number(draftPantry[index].amount) + amount, unit};
+      else draftPantry.push({ingredientId: id, amount, unit});
+      pantrySearch = '';
+      paint();
+    });
+    overlay.addEventListener('click', event => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      if (button.hasAttribute('data-close')) { close(); return; }
+      if (button.hasAttribute('data-pantry-remove')) { draftPantry.splice(Number(button.dataset.pantryRemove), 1); paint(); return; }
+      if (button.hasAttribute('data-block-add')) {
+        const id = overlay.querySelector('[data-block-select]')?.value;
+        if (id && !draftBlocked.includes(id)) draftBlocked.push(id);
+        blockSearch = '';
+        paint();
+        return;
+      }
+      if (button.hasAttribute('data-block-remove')) {
+        draftBlocked = draftBlocked.filter(id => id !== button.dataset.blockRemove);
+        paint();
+        return;
+      }
+      if (button.hasAttribute('data-save-pantry')) {
+        state.pantry = draftPantry.filter(row => Number(row.amount) > 0);
+        setBlockedIngredientIds(draftBlocked);
+        close();
+        return;
+      }
+      if (button.hasAttribute('data-random-recommend')) {
+        if (state.lastRecommendationId) { rerollOpen = true; drawMessage = '重抽前请先选择一个原因。'; paint(); return; }
+        const result = recommendWithinBudget({budgetGBP: draftBudget});
+        if (!result.ok) { drawMessage = result.closest ? `预算内没有符合的菜；最低可匹配估算 £${result.closest.costGBP.toFixed(2)}。` : '当前菜谱暂无完整商品匹配，无法随机推荐。'; paint(); return; }
+        state.lastRecommendationId = result.recipe.id;
+        draftIds = [...new Set([...draftIds, result.recipe.id])];
+        drawMessage = `已推荐：${result.recipe.nameZh || result.recipe.nameEn} · £${result.costGBP.toFixed(2)}`;
+        paint();
+        return;
+      }
+      if (button.hasAttribute('data-confirm-reroll')) {
+        if (!rerollReason) { drawMessage = '请先选择重抽原因。'; paint(); return; }
+        const result = recommendWithinBudget({budgetGBP: draftBudget, excludeRecipeIds: [state.lastRecommendationId]});
+        if (!result.ok) { drawMessage = result.closest ? `没有其他菜符合预算；最低可匹配估算 £${result.closest.costGBP.toFixed(2)}。` : '没有其他菜可匹配预算和商品。'; paint(); return; }
+        state.lastRerollReason = rerollReason;
+        state.lastRecommendationId = result.recipe.id;
+        draftIds = [...new Set([...draftIds, result.recipe.id])];
+        drawMessage = `已按“${rerollReason}”重抽：${result.recipe.nameZh || result.recipe.nameEn} · £${result.costGBP.toFixed(2)}`;
+        rerollOpen = false;
+        rerollReason = '';
+        paint();
+        return;
+      }
+      if (button.hasAttribute('data-raise-budget')) {
+        draftBudget = sum(shoppingRows().filter(row => !row.excluded));
+        state.budgetGBP = draftBudget;
+        persist();
+        paint();
+        return;
+      }
+      if (button.hasAttribute('data-save-shopping')) {
+        const total = sum(shoppingRows().filter(row => !row.excluded));
+        if (total > draftBudget) {
+          overlay.querySelector('.c-budget-message').textContent = '请先调整购物单或明确提高预算。';
+          return;
+        }
+        state.recipeIds = draftIds.filter(id => !hasBlockedIngredient(recipes().find(recipe => recipe.id === id)));
+        state.excluded = [...draftExcluded];
+        state.budgetGBP = draftBudget;
+        persist();
+        close();
+      }
+    });
+    overlay.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    return true;
   }
-  return {getPantry,getBudgetSummary,getShoppingList,getSelectedSubstitutions:()=>({...state.substitutions}),selectSubstitution,recommendWithinBudget,openPantryEditor:()=>openEditor('pantry'),openShoppingEditor:()=>openEditor('shopping'),setPantryQuantity,setRecipeIds,setBudgetGBP,calculateShoppingList:calculate,getBudget:()=>state.budgetGBP};
+  return {getPantry,getBlockedIngredientIds,setBlockedIngredientIds,getBudgetSummary,getShoppingList,getSelectedSubstitutions:()=>({...state.substitutions}),selectSubstitution,recommendWithinBudget,openPantryEditor:()=>openEditor('pantry'),openShoppingEditor:()=>openEditor('shopping'),setPantryQuantity,setRecipeIds,setBudgetGBP,calculateShoppingList:calculate,getBudget:()=>state.budgetGBP};
 }

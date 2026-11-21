@@ -82,7 +82,7 @@ const tofuSwap = getSubstitutions(dinner?.id, 'chicken').find(x => x.replacement
 const replacementAmount = (chickenLine?.quantity ?? 0) * (tofuSwap?.quantityRatio ?? 0);
 const tofuPack = getProducts('tofu', 'Tesco')[0];
 check(replacementAmount === 250 && tofuPack && Math.ceil(replacementAmount / tofuPack.packQuantity) === 1, 'swap-to-product user path failed');
-check(getProducts('pepper', 'Tesco').length === 0 && ingredients.find(x => x.id === 'pepper')?.nameEn && getProductSearchKeywords('pepper').length > 0, 'missing-product fallback failed');
+check(getProducts('chinkiang_vinegar', 'Tesco').length === 0 && ingredients.find(x => x.id === 'chinkiang_vinegar')?.nameEn && getProductSearchKeywords('chinkiang_vinegar').length > 0, 'missing-product fallback failed');
 const regional = getFeaturedRegionalRecipes();
 check(regional.length === 16 && new Set(regional.map(x => x.id)).size === 16 && new Set(regional.map(x => x.region)).size >= 12, 'regional recipe collection incomplete');
 for (const recipe of regional) {

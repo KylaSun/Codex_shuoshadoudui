@@ -273,6 +273,19 @@ export const products            = [
   P('tesco-dark-soy', 'dark_soy', 'Tesco', 'Amoy Dark Soy Sauce', '150 ml', 150, 'ml', 2.00, 'https://www.tesco.com/shop/en-GB/products/253778008'),
   P('tesco-chopped-garlic', 'garlic', 'Tesco', 'Tesco Frozen Chopped Garlic', '100 g', 100, 'g', 2.45, 'https://www.tesco.com/shop/en-GB/products/289766503'),
   P('tesco-ginger', 'ginger', 'Tesco', 'Tesco Ginger', '100 g', 100, 'g', 1.30, 'https://www.tesco.com/shop/en-GB/products/314931777'),
+  P('tesco-carrots', 'carrot', 'Tesco', 'Tesco Carrots', '1 kg', 1000, 'g', 0.75, 'https://www.tesco.com/shop/en-GB/products/305953125'),
+  P('tesco-salad-tomatoes', 'tomato', 'Tesco', 'Tesco Salad Tomatoes', '650 g', 650, 'g', 1.55, 'https://www.tesco.com/shop/en-GB/products/296056918'),
+  P('tesco-mixed-peppers', 'pepper', 'Tesco', 'Tesco Sliced Mixed Frozen Peppers', '500 g', 500, 'g', 0.89, 'https://www.tesco.com/shop/en-GB/products/263352514'),
+  P('tesco-stir-fry-beef', 'beef', 'Tesco', 'Tesco Stir Fry Beef', '350 g', 350, 'g', 6.40, 'https://www.tesco.com/shop/en-GB/products/267459083'),
+  P('tesco-spinach', 'spinach', 'Tesco', 'Tesco Spinach', '500 g', 500, 'g', 1.77, 'https://www.tesco.com/shop/en-GB/products/275549004'),
+  P('tesco-pork-stir-fry', 'pork_strips', 'Tesco', 'Tesco Pork Stir Fry', '500 g', 500, 'g', 4.25, 'https://www.tesco.com/shop/en-GB/products/267011428'),
+  P('tesco-pork-belly', 'pork_belly', 'Tesco', 'Tesco British Pork Belly Slices', '500 g', 500, 'g', 4.65, 'https://www.tesco.com/shop/en-GB/products/322062215'),
+  P('tesco-garden-peas', 'peas', 'Tesco', 'Tesco Garden Peas', '1 kg', 1000, 'g', 1.75, 'https://www.tesco.com/shop/en-GB/products/250172580'),
+  P('tesco-raw-king-prawns', 'prawns', 'Tesco', 'Tesco Raw King Prawns', '170 g', 170, 'g', 3.40, 'https://www.tesco.com/shop/en-GB/products/291731507'),
+  P('tesco-cooked-ham', 'ham', 'Tesco', 'Tesco British Cooked Ham Slices', '120 g', 120, 'g', 2.30, 'https://www.tesco.com/shop/en-GB/products/316177140'),
+  P('tesco-rice-vermicelli', 'rice_vermicelli', 'Tesco', 'Tiger Tiger Rice Vermicelli', '400 g', 400, 'g', 2.50, 'https://www.tesco.com/shop/en-GB/products/273027879'),
+  P('tesco-shaoxing-wine', 'shaoxing_wine', 'Tesco', 'Tesco Shaoxing Rice Wine', '150 ml', 150, 'ml', 3.80, 'https://www.tesco.com/shop/en-GB/products/275114905'),
+  P('tesco-dried-shiitake', 'dried_shiitake', 'Tesco', 'Kingfisher Dried Shiitake Mushrooms', '40 g', 40, 'g', 3.00, 'https://www.tesco.com/shop/en-GB/products/303646763'),
 ];
 
 export const ingredientById = Object.fromEntries(ingredients.map(x => [x.id, x]))                              ;

@@ -9,7 +9,7 @@ const makeC=(storage=memory())=>createCModule({getRecipes,getIngredients,getProd
 test('C calculates current B recipes from canonical pack quantities',()=>{
   const c=makeC();
   assert.equal(getRecipes().length,47);
-  assert.equal(getProducts().length,42);
+  assert.equal(getProducts().length,55);
   const quote=c.getBudgetSummary('egg-fried-rice');
   assert.ok(Number.isFinite(quote.totalGBP));
   assert.ok(quote.totalGBP>0);

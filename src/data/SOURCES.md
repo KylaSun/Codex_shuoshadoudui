@@ -58,7 +58,7 @@
 
 ## 超市商品目录
 
-以下 42 条是人工查看 Tesco / Sainsbury’s 公开商品页或商品目录后记录的英文名、规格和页面参考价格。`priceRecordedOn` 表示**本目录记录页面参考价的日期**，不是 API 时间戳；超市价格、商品详情和库存可能随时变化。商品页链接用于核对，不用于自动抓取。下表采用普通展示价，不将限时 Clubcard 价作为默认价格。
+以下 55 条是人工查看 Tesco / Sainsbury’s 公开商品页或商品目录后记录的英文名、规格和页面参考价格。`priceRecordedOn` 表示**本目录记录页面参考价的日期**，不是 API 时间戳；超市价格、商品详情和库存可能随时变化。商品页链接用于核对，不用于自动抓取。下表采用普通展示价，不将限时 Clubcard 价作为默认价格。
 
 | 数据 ID | 页面来源 | 记录规格 | 记录参考价 |
 | --- | --- | ---: | ---: |
@@ -104,5 +104,18 @@
 | tesco-dark-soy | [Amoy Dark Soy Sauce](https://www.tesco.com/shop/en-GB/products/253778008) | 150 ml | £2.00 |
 | tesco-chopped-garlic | [Tesco Frozen Chopped Garlic](https://www.tesco.com/shop/en-GB/products/289766503) | 100 g | £2.45 |
 | tesco-ginger | [Tesco Ginger](https://www.tesco.com/shop/en-GB/products/314931777) | 100 g | £1.30 |
+| tesco-carrots | [Tesco Carrots](https://www.tesco.com/shop/en-GB/products/305953125) | 1 kg | £0.75 |
+| tesco-salad-tomatoes | [Tesco Salad Tomatoes](https://www.tesco.com/shop/en-GB/products/296056918) | 650 g | £1.55 |
+| tesco-mixed-peppers | [Tesco Sliced Mixed Frozen Peppers](https://www.tesco.com/shop/en-GB/products/263352514) | 500 g | £0.89 |
+| tesco-stir-fry-beef | [Tesco Stir Fry Beef](https://www.tesco.com/shop/en-GB/products/267459083) | 350 g | £6.40 |
+| tesco-spinach | [Tesco Spinach](https://www.tesco.com/shop/en-GB/products/275549004) | 500 g | £1.77 |
+| tesco-pork-stir-fry | [Tesco Pork Stir Fry](https://www.tesco.com/shop/en-GB/products/267011428) | 500 g | £4.25 |
+| tesco-pork-belly | [Tesco British Pork Belly Slices](https://www.tesco.com/shop/en-GB/products/322062215) | 500 g | £4.65 |
+| tesco-garden-peas | [Tesco Garden Peas](https://www.tesco.com/shop/en-GB/products/250172580) | 1 kg | £1.75 |
+| tesco-raw-king-prawns | [Tesco Raw King Prawns](https://www.tesco.com/shop/en-GB/products/291731507) | 170 g | £3.40 |
+| tesco-cooked-ham | [Tesco British Cooked Ham Slices](https://www.tesco.com/shop/en-GB/products/316177140) | 120 g | £2.30 |
+| tesco-rice-vermicelli | [Tiger Tiger Rice Vermicelli](https://www.tesco.com/shop/en-GB/products/273027879) | 400 g | £2.50 |
+| tesco-shaoxing-wine | [Tesco Shaoxing Rice Wine](https://www.tesco.com/shop/en-GB/products/275114905) | 150 ml | £3.80 |
+| tesco-dried-shiitake | [Kingfisher Dried Shiitake Mushrooms](https://www.tesco.com/shop/en-GB/products/303646763) | 40 g | £3.00 |
 
-没有商品记录的食材，如郫县豆瓣酱、韭菜、蒜苗、榨菜、公瑾爆蛋的白醋，只提供英文采购名和搜索词；不能把它们当作零价格，也不能在界面声称 Tesco / Sainsbury’s 没有现货。Tesco 的 [Distilled Vinegar](https://www.tesco.com/shop/en-GB/products/261781314) 商品页标明是**蒸馏麦芽醋，含大麦**，所以没有将其匹配到白醋。示例商品目录的缺口不代表整个英国市场的供应情况。
+没有商品记录的食材，如郫县豆瓣酱、韭菜、蒜苗、榨菜、公瑾爆蛋的白醋，只提供英文采购名和搜索词；不能把它们当作零价格，也不能在界面声称 Tesco / Sainsbury’s 没有现货。Tesco 的 [Distilled Vinegar](https://www.tesco.com/shop/en-GB/products/261781314) 商品页标明是**蒸馏麦芽醋，含大麦**，所以没有将其匹配到白醋。圆白菜通常按“个”出售，菜谱按克计量；八角商品按克出售，菜谱按颗计量，因此未凭空估算换算重量。示例商品目录的缺口不代表整个英国市场的供应情况。
