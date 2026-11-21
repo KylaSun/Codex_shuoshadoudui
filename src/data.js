@@ -1,9 +1,10 @@
 import {recipes as demoRecipes,ingredients as demoIngredients,products as demoProducts,substitutions as demoSubstitutions} from './demo-data.js';
+import {mergeCustomRecipes} from './custom-recipes.js';
 
 // B/C/D may register adapters before this module loads, or dispatch dinner:adapters-updated.
 export function adapters(){return window.DinnerAppAdapters || {};}
 function getArray(key,fallback){const x=adapters()[key];if(typeof x!=='function')return fallback;try{const result=x();return Array.isArray(result)?result:fallback;}catch(error){console.warn(`Adapter ${key} failed`,error);return fallback;}}
-export const getRecipes=()=>getArray('getRecipes',demoRecipes);
+export const getRecipes=()=>mergeCustomRecipes(getArray('getRecipes',demoRecipes));
 export const getIngredients=()=>getArray('getIngredients',demoIngredients);
 export const getProducts=()=>getArray('getProducts',demoProducts);
 export const getSubstitutions=()=>getArray('getSubstitutions',demoSubstitutions);
