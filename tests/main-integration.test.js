@@ -2,6 +2,8 @@ import test, {beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {ingredients, recipes, substitutions} from '../src/demo-data.js';
 import {createCustomRecipe, updateCustomRecipe, deleteCustomRecipe} from '../src/custom-recipes.js';
+import {installBAdapters} from '../src/team-adapters.js';
+import {installCAdapters} from '../src/c-adapter.js';
 
 let caseId = 0;
 beforeEach(() => {
@@ -17,9 +19,10 @@ async function app(hash = '') {
   // Exercise the actual merged main.js with only the browser DOM boundary stubbed.
   const root = new EventTarget();
   const customSection = new EventTarget();
+  const kitchenSection = new EventTarget();
   root.querySelector = selector => selector === '#custom-recipes-page'
     ? (root.innerHTML.includes('id="custom-recipes-page"') ? customSection : null)
-    : {focus() {}};
+    : selector === '#c-page' ? (root.innerHTML.includes('id="c-page"') ? kitchenSection : null) : {focus() {}};
   globalThis.document = {getElementById: id => id === 'app' ? root : null};
   location.hash = hash;
   await import(`../src/main.js?merge-integration=${++caseId}`);
@@ -44,10 +47,10 @@ const customDraft = nameZh => ({
   ingredients: [{ingredientId: 'egg', amount: 2, unit: '个'}], steps: ['打蛋。', '炒熟。'],
 });
 
-test('merged A home, search, ingredient details and all five navigation entries remain available', async () => {
+test('merged A home, search, ingredient details and all six navigation entries remain available', async () => {
   const ui = await app();
   assert.match(ui.html(), /今天想吃的家乡菜/);
-  for (const page of ['home', 'search', 'pantry', 'shopping', 'custom-recipes']) {
+  for (const page of ['home', 'search', 'recommendations', 'pantry', 'shopping', 'custom-recipes']) {
     assert.ok(ui.html().includes(`data-go="${page}"`));
   }
   ui.search('CHICKEN');
@@ -64,6 +67,29 @@ test('merged A home, search, ingredient details and all five navigation entries 
   assert.match(ui.html(), /购物单及预算调整属于 C 模块/);
   ui.click({go: 'custom-recipes'});
   assert.match(ui.html(), /＋ 创建菜谱/);
+});
+
+test('full A+B+C+D page navigation uses C services, contextual B substitutions and pending shopping plans', async () => {
+  installBAdapters(window); const c = installCAdapters(window);
+  const ui = await app('#recommendations');
+  assert.match(ui.html(), /每日/); assert.match(ui.html(), /生成今日推荐/);
+  ui.click({go: 'pantry'});
+  assert.match(ui.html(), /保存库存/); assert.ok(!ui.html().includes('尚未接入'));
+  ui.click({recipe: 'mapo-tofu'});
+  assert.match(ui.html(), /无法完整估价/);
+  ui.click({sub: 'doubanjiang-to-miso-chilli-mapo'});
+  assert.match(ui.html(), /味噌酱 \+ 辣椒酱/);
+  ui.click({}, 'data-confirm-sub');
+  assert.equal(c.getSelectedSubstitutions()['mapo-tofu:doubanjiang'], 'doubanjiang-to-miso-chilli-mapo');
+  const components = c.calculateShoppingList(['mapo-tofu']);
+  assert.ok(components.some(x => x.ingredientId === 'chilli_paste' && x.amount === 5));
+  ui.click({recipe: 'egg-fried-rice'});
+  assert.match(ui.html(), /加入购物计划/);
+  ui.click({cAddRecipe: 'egg-fried-rice'});
+  assert.match(ui.html(), /超过当前预算/);
+  assert.deepEqual(c.getKitchenState().recipeIds, []); // It is a draft, not an auto-saved purchase plan.
+  ui.click({go: 'custom-recipes'});
+  assert.match(ui.html(), /AI 图片导入/);
 });
 
 test('merged A search and details refresh after D creation, edit and deletion without replacing B adapter', async () => {

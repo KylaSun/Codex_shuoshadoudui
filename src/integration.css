@@ -1,0 +1,29 @@
+/* Additive integration styles. B's typography, artwork, recipes and theme remain authoritative. */
+.c-panel{background:var(--cream,#fffdf7);border:1px solid var(--line,#e4d9c9);border-radius:12px;padding:20px;margin:18px 0;min-width:0}
+.c-page .muted{color:var(--muted-ink,#766c5f);line-height:1.8}
+.c-page label{display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:650;min-width:0}
+.c-page input,.c-page select{font:inherit;min-width:0;max-width:100%;border:1px solid var(--line,#e4d9c9);border-radius:8px;padding:11px;background:var(--cream,#fffdf7);color:var(--ink,#2b241c)}
+.c-page input:focus-visible,.c-page select:focus-visible{outline:3px solid var(--red,#a33d29);outline-offset:2px}
+.c-form-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:12px}
+.c-stock-row{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.c-stock-row label{flex:1}.c-stock-row input{width:100%}
+.c-page .outline{margin:0}.c-page fieldset legend{font-size:20px;padding:0 10px;font-weight:750}
+.c-recipe-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-height:270px;overflow-y:auto;padding:4px}
+.c-recipe-options label{flex-direction:row;align-items:start;line-height:1.6;font-weight:500}
+.c-page input[type=checkbox]{flex-shrink:0;width:18px;height:18px;margin:3px 0;accent-color:var(--red,#a33d29)}
+.c-budget-field{max-width:300px;margin:22px 0}.c-budget-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.c-purchase-row{display:flex!important;flex-direction:row!important;align-items:start;gap:14px!important;line-height:1.6}
+.c-purchase-row span{display:flex;flex-direction:column;gap:5px;min-width:0;overflow-wrap:anywhere}
+.c-purchase-row small{color:var(--muted-ink,#766c5f)}.c-omitted{opacity:.65}.c-omitted strong{text-decoration:line-through}
+.c-warning,.c-notice{line-height:1.8;padding:15px 18px;border:1px solid #e2c19b;background:#fff2dc;border-radius:10px;overflow-wrap:anywhere;font-size:14px}
+.c-notice{background:#f4e4d1;border-color:var(--line,#e4d9c9)}.c-warning-text{color:#98402b!important}
+.c-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:22px 0}
+.c-page button:disabled{opacity:.5;cursor:not-allowed}.c-recommendation-card{max-width:370px;margin:24px 0}.c-recommendation-card .recipe-card{width:100%}
+#c-recommend-form{display:flex;flex-direction:column;gap:16px;max-width:550px}
+.bottom-nav .nav-button{min-width:0;flex:1;padding-inline:3px}.bottom-nav .nav-button small{white-space:nowrap}
+/* D participates in Fanxiang's existing cream/red palette as well. */
+.custom-form,.custom-recipe-card,.custom-dropzone{background:var(--cream,#fffdf7);border-color:var(--line,#e4d9c9)}
+.custom-import,.custom-notice{background:#f4e4d1;border-color:var(--line,#e4d9c9);color:var(--ink,#2b241c)}
+.custom-form label,.custom-form .muted,.custom-recipes .muted{color:var(--muted-ink,#766c5f)}
+.custom-form input,.custom-form select,.custom-form textarea{border-color:var(--line,#e4d9c9);color:var(--ink,#2b241c)}
+@media(max-width:600px){.c-panel{padding:15px}.c-form-grid{grid-template-columns:1fr 1fr}.c-form-grid>label:first-child{grid-column:1/-1}.c-form-grid>.primary{grid-column:1/-1}.c-stock-row label{flex-basis:60%}.c-recipe-options{grid-template-columns:1fr}.c-page .budget-result{align-items:start;flex-direction:column;gap:8px}.c-actions>*{flex:1}.bottom-nav .nav-button small{font-size:10px}.c-budget-form>label{flex:1}}

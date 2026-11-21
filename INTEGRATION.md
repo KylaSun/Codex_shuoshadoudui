@@ -1,7 +1,7 @@
-# A 模块集成说明
+# 饭乡 A/B/C/D 整合说明
 
 ## 说明
-本目录是原仓库为空时建立的独立前端。UI 由 A 负责；`src/demo-data.js` 是仅供接线和展示的最小示例，**不是 B 的权威数据**。不包含 C 的预算、库存扣减、整包计价或随机推荐算法。D 的本地菜谱和第二阶段 AI 图片识别按下文接入，A 不实现这些业务。
+根目录是唯一网页入口，保留 B 新版「饭乡」界面。B 通过 `src/team-adapters.js` 加载权威目录；`src/demo-data.js` 仅在数据 getter 不可用时兜底。C 已接入库存、整包预算、购物计划与每日推荐；D 保留本地菜谱和 AI 图片识别。C 分支原 `github-repo/` 中的重复网页不会被加载。
 
 ## 启动
 安装 Node.js 20.12+。在目录中运行 `npm start`，浏览器打开 `http://localhost:5173`。无需安装第三方依赖。`npm test` 运行搜索、数据、D 导入和 HTTP 接口测试（需允许本机临时端口），`npm run build` 进行 JavaScript 语法检查（不产出构建目录）。
@@ -10,7 +10,8 @@
 在加载 `src/main.js` 之前设置 `window.DinnerAppAdapters`，例如：
 
 ```html
-<script src="/team-adapters.js"></script>
+<script type="module" src="/src/team-adapters.js"></script>
+<script type="module" src="/src/c-adapter.js"></script>
 <script type="module" src="/src/main.js"></script>
 ```
 
@@ -44,7 +45,7 @@ window.dispatchEvent(new Event('dinner:adapters-updated'));
 ## 行为与边界
 - A: 真实中英搜索、菜谱和食材详情、底部导航、空状态、商品查看链接、替代品味道变化确认弹窗。确认后发给 C `selectSubstitution`，C 应计算替代后价格与购物单，A 刷新视图。C 可以返回 `false` 拒绝更改。
 - A 不缓存 pantry / 自定义 recipe，也不展示计算出的虚假预算。B/C/D 应使用 localStorage 存储用户自己的数据，A 每次读取适配器。
-- C 应在执行“重新随机推荐”前先要求选择原因；超过预算时必须允许修改购物单或明确提高预算。这些流程没有在 A 页面内伪造。
+- C 在执行“重新随机推荐”前先要求选择原因；超过预算时允许修改购物单或明确提高预算。页面调用 C 的真实计算结果，不伪造金额或推荐。
 - B 商品目前是静态演示参考值，价格、日期**不代表已验证的真实商品报价**，链接为超市目录入口，不是具体 SKU 页面；正式 B 必须补全可靠记录和具体商品 URL。
 - D 在 `getRecipes()` 合并进本地自定义菜谱，确保导入的菜谱能像内置菜谱一样被搜索与查看。
 - 适配器替换后触发 `dinner:adapters-updated` 刷新视图。所有外链为新标签页并使用 `noopener noreferrer`。
@@ -55,7 +56,7 @@ window.dispatchEvent(new Event('dinner:adapters-updated'));
 3. 点菜谱 → 查看食材、步骤、库存接入提示及预算接入提示；点击某个食材 → 查看 Tesco/Sainsbury’s 静态商品示例或“无商品匹配”。
 4. 打开奶油蘑菇意面 → 将奶酪替代为牛奶：必须先确认味道变化，取消不生效，确认后显示“已选择”，可恢复原食材。
 5. 底部首页/找菜/我的厨房/购物单导航可切换；没有 C 时显示诚实的未接入状态，不显示假预算或假购物单。
-6. 集成 C 后：检查库存减少采购价、替代改变整包数量与金额、超预算时可调整。**这三项不在 A 独立版本内验证**。
+6. 整合版 C：检查库存减少采购价、组合替代改变整包数量与金额、超预算时必须调整后才能保存；“每日推荐”可生成、按原因重抽并加入购物草稿。
 
 ## 替代规则展示
 - `equivalent: false` 显示“味道有变化”，不会据此禁用替代选项。
@@ -69,7 +70,7 @@ window.dispatchEvent(new Event('dinner:adapters-updated'));
 - 保存的 Recipe 字段为 `{id,nameZh,nameEn?,timeMinutes,ingredients:[{ingredientId,amount,unit}],steps:string[]}`。不维护第二套食材主数据：选项和保存校验均读取当前 `getIngredients()`。若 B 移除旧食材，已有菜谱仍可读取，编辑时提示重新选择有效食材后保存。
 - `src/data.js` 导出的 `getRecipes()` **每次**先读当前 B 适配器（未接入时读 demo），再追加本地菜谱，不缓存或修改 B 返回的数组，也不包装或赋值 `window.DinnerAppAdapters.getRecipes`。因此 B 可在 D 加载前后注册或整体替换适配器。上游若意外出现相同 ID，列表优先使用 B 的记录，不产生重复 ID。
 - 创建、编辑和删除在 localStorage 写入成功后均触发 `dinner:adapters-updated`。A 原有监听会刷新当前搜索/详情，D 表单草稿在该事件刷新时保留。失败不触发成功事件、不清空表单；损坏或未知版本的存储不覆盖，A 仍能读取 B/demo 菜谱，D 页面显示错误。
-- 联调时，其他模块需要完整菜谱列表时应调用 `src/data.js` 导出的 `getRecipes()`。直接调用 `DinnerAppAdapters.getRecipes()` 仍只得到 B 的数据，这是为了不替换 B 适配器。C 的预算/购物单逻辑未修改，需要另行确认其支持 `custom-` ID、当前食材 ID 和用户填写的单位；D 不计算或伪造预算。
+- 联调时，其他模块需要完整菜谱列表时调用 `src/data.js` 导出的 `getRecipes()`。直接调用 `DinnerAppAdapters.getRecipes()` 仍只得到 B 的数据；整合版 `src/c-adapter.js` 已改为读取统一数据层，因此 C 能动态读取 D 的 `custom-` ID。用户自定义单位无法换算时明确显示未报价，D 不计算或伪造预算。
 
 手动联调步骤：
 1. 底部“我的菜谱”创建一条包含多食材、多步骤的菜谱；保存后列表可见，刷新后 ID 与内容保持不变。
@@ -98,3 +99,28 @@ window.dispatchEvent(new Event('dinner:adapters-updated'));
 4. 识别完成时确认菜谱库仍为空；点击填入表单，对照原图逐项核对，验证歧义食材必须手选、未确认/未补齐不能保存。保存后刷新页面，通过 A 的中英文名和食材搜索进入详情。
 5. 识别中取消、关闭或更换图片，确认旧请求不会回填；重新识别成功后仍需主动填入、检查并确认。模拟额度不足、网络断开、无效 JSON、模型拒绝和超时，确认能重试且不产生菜谱。
 6. 验证原图不进入 localStorage；测试新导入菜谱和原有菜谱的编辑、删除、持久化、A 搜索详情与替代品流程。真实浏览器视觉验收及真实提供方识别联调必须单独执行，离线自动测试不能替代。
+
+## C 模块整合契约
+
+来源：`origin/feature/c-pantry-shopping:github-repo/src/c-module.js` 与 `c-adapter.js`，原 C 的 7 项业务测试已移入根目录继续运行。没有复制覆盖其旧 `main.js`、`index.html` 或 `styles.css`。
+
+- `src/c-module.js` 保留 `createCModule`、库存、预算、购物单、`recommendWithinBudget` 等接口，并修复原实现遗漏的组合替代、失效菜谱零价、商品整包选择、确认替代持久化和写入失败问题。`src/c-pages.js` 提供现有主题下的厨房、购物单和每日推荐页面；新增 `src/integration.css`，不覆盖 B 原主题文件。
+- 加载顺序 B 适配器 → C 适配器 → 主页面。C 仅注册自己拥有的方法，不替换 B 的 `getRecipes/getIngredients/getProducts/getSubstitutions`。C 内部通过 `src/data.js` 取得 B+D 的完整菜谱，因此不会出现 C 漏掉自定义菜谱或 getter 递归。
+- `getBudgetSummary(recipeId, selections?)` 返回 `{items,complete,totalGBP,knownSubtotalGBP,label}`。不完整报价的 `totalGBP` 是 `NaN`，`knownSubtotalGBP` 仅为已知部分；这些是浏览器内接口，不以 JSON `null` 代替金额。失效菜谱、未知单位与缺商品不会返回完整 £0。真正全部已有库存、无需采购时可显示 £0。
+- `calculateShoppingList(recipeIds?, selections?, excluded?)` 先解析规则的主替代与 `extraReplacements`，再按食材 ID＋单位维度合并，扣一次库存，最后按商品结构化 `packQuantity/packUnit` 算整包；没有结构化字段时才严格解析单一规格字符串。原生“12 pieces / 240 g”的饺子按 12 个计价，16 个需要两包，不解析成 240 个。
+- 只换算质量 g/kg、体积 ml/l、计数 each/个/枚等同维度单位，不推测食材密度或一汤匙克数。商品选择比较满足当前需求的整包总金额；不把瓶价最低误当作整单最低，不包含配送费。
+- `quoteShoppingPlan(ids, excluded)` 预览草稿；`saveShoppingPlan({recipeIds,excluded,budgetGBP})` 不完整或超预算时返回 `{ok:false,reason}` 并保持旧状态。用户可以明确排除采购项，界面必须标明这是选中项金额，被排除的食材仍需自行准备。取消草稿不改存储。
+- `selectSubstitution` 要求真实规则/菜谱/食材上下文与 `flavourConfirmed:true`。主替代和附加食材均计入报价，确认选择和恢复原食材都持久化并触发 `dinner:adapters-updated`。A 使用 C 的当前确认记录显示选择，刷新不会丢失已确认替代。
+- `requestRecommendation({reason?,random?})` 对当前预算与库存生成完整可报价的随机菜；当天已有推荐时必须提供 `REROLL_REASONS` 内的原因，并排除上次菜。日期按浏览器本地日期隔离，失败不替换上次成功结果。没有自动替代、自动涨预算或虚假候选。
+- `openPantryEditor/openShoppingEditor` 保留为导航接口，触发 `dinner:navigate` 进入对应完整页面；库存表单不再打开第二套旧网页。
+- 沿用存储键 `tonight-what-c-state-v1`；扩展 `substitutions`、`recommendation`，兼容旧 pantry/recipeIds/budgetGBP/excluded。写入成功后才更新内存并通知 A，失败不报成功；损坏存储显示错误并禁止覆盖。库存和预算变化会重新估价，当前没有消费扣库动作。
+
+最终手动验收：
+1. 从根目录启动，首页图片和六个导航入口正常，地区/标签/食材搜索及 B 家乡菜、网络流行菜详情保持完整。
+2. 厨房录入大米 0.3kg 与鸡蛋库存，刷新后保留；修改总量、移除项，检查详情与购物计划同步重算。
+3. 麻婆豆腐确认豆瓣酱替代，核对 20g 味噌＋5g 辣椒酱，花椒仍为缺商品；取消替代不生效，刷新确认选择仍保留。
+4. 抱蛋煎饺需 16 个饺子、商品每包 12 个时按两包；多菜共用食材先合并，库存只扣一次。不存在的商品与“汤匙”单位不能显示虚假完整报价。
+5. 详情或推荐加入购物草稿，验证取消不保存；将预算降至 0，必须调整选中项或明确提高预算再保存。排除未报价项后仍显示非完整菜谱成本提示。
+6. 每日推荐成功后，缺原因不能重抽；选择原因后换菜，刷新同一天保留结果，新一天允许生成新结果。预算无候选时显示明确失败。
+7. D 手工创建或 AI 检查后保存的菜谱，可搜索、查看、估价、加入购物计划和推荐；编辑/删除后 C 动态读取更新，不保留虚假金额。AI 缺密钥时明确未配置，不使用假识别结果。
+8. 在桌面和手机宽度检查采购长列表、六项导航、表单与保存按钮。自动检查为 `npm test`、`npm run build`、`npm run validate`，后者读取 B 原始 TS 需 Node.js 24+。

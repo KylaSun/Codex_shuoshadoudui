@@ -77,7 +77,7 @@ test('HTTP API recognizes uploaded bytes, validates requests, hides secrets, and
   const success = await fetch(`${base}/api/recipe-recognition`, {method: 'POST', headers: {'Content-Type': 'image/png'}, body: png});
   assert.equal(success.status, 200);
   assert.deepEqual((await success.json()).recipe, extraction());
-  for (const path of ['/', '/src/main.js', '/src/recipe-import-client.js']) assert.equal((await fetch(base + path)).status, 200);
+  for (const path of ['/', '/src/main.js', '/src/recipe-import-client.js', '/src/c-adapter.js', '/src/integration.css', '/assets/regional-dishes.jpg']) assert.equal((await fetch(base + path)).status, 200);
   for (const path of ['/.env', '/.env.example', '/.git/config', '/server.js', '/server/recipe-recognition.js', '/src/../.env', '/package.json']) assert.equal((await fetch(base + path)).status, 404);
   assert.equal((await fetch(`${base}/api/recipe-recognition`)).status, 405);
   assert.equal((await fetch(`${base}/api/recipe-recognition`, {method: 'POST', headers: {'Content-Type': 'text/plain'}, body: 'text'})).status, 415);

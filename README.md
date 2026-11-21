@@ -1,6 +1,6 @@
-# 饭乡 · Module A/B Demo
+# 饭乡 · A/B/C/D 整合版
 
-英国中国留学生晚餐决策 Demo 的 A 模块：首页、搜索、菜谱/食材详情、底部导航、展示示例商品及味道变化确认。**不包含 C 的预算计算和购物单业务逻辑。**
+给海外留学生的家乡菜晚餐工具。保留 A 的搜索和详情、B 的新版「饭乡」界面与目录、D 的本地菜谱和 AI 图片导入，并接入 C 的库存、整包预算、购物单与每日推荐。所有模块在同一根项目运行，无需启动 `github-repo/` 中的第二套网页。
 
 ## Quick start
 
@@ -11,13 +11,28 @@ npm start
 # visit http://localhost:5173
 npm test
 npm run build
+npm run validate
 ```
 
 No `npm install` required. B's built-in catalog is loaded from `src/data/catalog.js`; `src/demo-data.js` remains A's fallback. See [INTEGRATION.md](INTEGRATION.md) for B/C/D module adapter contracts and end-to-end acceptance steps.
 
+在仓库根目录执行命令。网站运行支持 Node.js 20.12+；`npm run validate` 读取 B 的原始 TypeScript 目录，需要 Node.js 24+。网页使用已提交的 `catalog.js`，无需安装依赖或重生数据。默认访问 `http://localhost:5173`；端口被占用时可用 `PORT=5186 npm start`，更换地址/端口会使用另一份浏览器本地存储。
+
 The six regional dish images in `assets/regional-dishes.jpg` were generated for this demo and are illustrative. The remaining recipe cards use typographic artwork so that an unrelated dish photo is not mistaken for the recipe.
 
 The supermarket prices are fictional/illustrative static entries with recorded dates; they are **not** live prices, verified historical prices, or stock availability. Product links may point to supermarket catalog landing pages.
+
+## 整合后的使用流程
+
+- **首页 / 找菜**：保留家乡地区入口、菜谱图片、地区和标签搜索，以及食材和商品详情。原始中式食材和替代规则保留，替代必须先确认味道变化；组合替代完整计入主替代与附加食材。
+- **我的厨房**：从标准食材库选择食材，填写库存总量和单位，支持更新、删除与刷新恢复。报价合并所有选菜的需求后只扣一次库存，不会把 g、ml、个互相猜测换算；当前不提供“做完了”消费扣库。
+- **每日推荐**：设定采购预算后生成今日随机推荐，仅选择能完整匹配参考商品、且按整包计算后不超预算的菜。推荐按浏览器本地日期保存；再次推荐必须选择原因，且不会立即重复上一道。候选不足会明确提示，不自动替换食材或提高预算。
+- **购物单**：从菜谱详情或推荐点击“加入购物计划”，再选择菜谱、调整预算和采购项。加入的是草稿，点击“确认并保存购物单”才持久化；取消恢复原计划。超预算时必须调整或点击“明确提高预算”，未报价项目必须处理或明确排除。排除项仍是菜谱所需食材，界面显示的小计不代表完整菜谱成本。
+- **我的菜谱**：手工创建或 AI 导入后，经检查保存的自定义菜谱，也能参与 C 的预算、购物计划和推荐。删除已选入计划的自定义菜谱会提示失效，不会显示虚假的 £0 完整报价。
+
+采购按 B 的结构化 `packQuantity/packUnit` 取整包数，逐项选整包总金额较低的参考商品，可能来自不同超市；不含运费。缺失商品、未知单位或无效菜谱会显示“无法完整估价”和已知部分金额，不按零价补齐。已确认的食材替代随 C 状态持久化，恢复原食材会同步刷新预算和购物单。
+
+C 沿用 `tonight-what-c-state-v1`，兼容原库存、计划与预算字段。D 的 `hometaste.custom-recipes.v1` 不变；原图不写入这些存储。存储失败会显示错误并保持原已保存状态；不做账号或云端同步。
 
 ## D 模块：我的菜谱
 
