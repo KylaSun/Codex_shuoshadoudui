@@ -1,10 +1,10 @@
 # A 模块集成说明
 
 ## 说明
-本目录是原仓库为空时建立的独立前端。UI 由 A 负责；`src/demo-data.js` 是仅供接线和展示的最小示例，**不是 B 的权威数据**。不包含 C 的预算、库存扣减、整包计价或随机推荐算法；不包含 D 的图片解析/菜谱上传逻辑。
+本目录是原仓库为空时建立的独立前端。UI 由 A 负责；`src/demo-data.js` 是仅供接线和展示的最小示例，**不是 B 的权威数据**。不包含 C 的预算、库存扣减、整包计价或随机推荐算法。D 的本地菜谱和第二阶段 AI 图片识别按下文接入，A 不实现这些业务。
 
 ## 启动
-安装 Node.js 20+。在目录中运行 `npm start`，浏览器打开 `http://localhost:5173`。无需安装第三方依赖。`npm test` 运行搜索和数据测试，`npm run build` 进行 JavaScript 语法检查（不产出构建目录）。
+安装 Node.js 20.12+。在目录中运行 `npm start`，浏览器打开 `http://localhost:5173`。无需安装第三方依赖。`npm test` 运行搜索、数据、D 导入和 HTTP 接口测试（需允许本机临时端口），`npm run build` 进行 JavaScript 语法检查（不产出构建目录）。
 
 ## 对接统一数据
 在加载 `src/main.js` 之前设置 `window.DinnerAppAdapters`，例如：
@@ -78,3 +78,23 @@ window.dispatchEvent(new Event('dinner:adapters-updated'));
 4. 删除时先取消确认，再确认删除；刷新后仍删除，内置菜谱仍可搜索和查看。
 5. B 注册/替换适配器并触发更新事件后，检查 B 菜谱与自定义菜谱均保留，表单选项使用新的食材库；再联调 C 对自定义菜谱的预算与采购。
 6. 在桌面和窄屏浏览器检查五个导航入口、表单布局、键盘操作、必填项校验和存储禁用时的提示。
+
+## D 第二阶段：AI 图片识别接口
+
+- `server/recipe-recognition.js`：读取服务端 `OPENAI_API_KEY`、`RECIPE_VISION_MODEL`、`RECIPE_VISION_ENDPOINT`；默认 `gpt-5.4-mini` / `https://api.openai.com/v1/responses`。密钥配置和官方图片输入文档见 README；`.env.example` 不含真实密钥。
+- `GET /api/recipe-recognition/status` 返回 `{configured:boolean,message:string}`，只检查本地配置，不验证密钥权限或真实网络；不返回密钥或 endpoint。
+- `POST /api/recipe-recognition` 接收原始图片二进制，`Content-Type` 为 `image/jpeg`、`image/png` 或 `image/webp`，不接受 URL、JSON、multipart 或浏览器提供的模型/密钥。限制 5 MiB，同时检查 MIME 与文件头；声明大小和流式累计大小都受限制。同源请求、最多两个并发、上游 60 秒超时。客户端取消会中止上游 fetch；已发送部分的提供方计费无法撤回。
+- 成功返回 `{recipe:{isRecipe:true,nameZh:string|null,nameEn:string|null,timeMinutes:number|null,ingredients:[{name:string|null,amount:number|null,unit:string|null,quantityText:string|null}],steps:string[],warnings:string[]}}`。这是 **待检查的提取结果**，没有 ID，不是可直接入库的 Recipe。未知字段、错误类型、超长内容、无菜谱、模型拒绝/截断、非法 JSON 均不作为成功结果。
+- 失败返回 `{error:{code,message}}`：400 空图/请求无效，403 跨源，413 超限，415 格式/文件头不符，422 拒绝或无有效提取结果，429 本地繁忙，502 上游/解析错误，503 未配置，504 超时/取消。不透传提供方内部错误、密钥或原图；响应均禁止缓存。
+- `src/recipe-import.js` 是服务端/浏览器共享校验及食材匹配；`src/recipe-import-client.js` 负责文件校验、状态检查和 XHR 上传进度；`src/recipe-image-importer.js` 管理内存预览、取消/重试与过期请求隔离；`custom-recipes-page.js` 复用原表单，显示提取原文和缺失警告。所有识别内容按不可信文本转义展示。
+- `ingredientId` **只由浏览器依据当前 `getIngredients()` 标准食材库匹配**，不让模型编造 ID，不修改 B 数据或 B/C 适配器。标准中英文名/别名规范化后必须唯一精确匹配，歧义、未匹配项留空强制手选。重复食材不自动求和，按原有校验要求用户核实合并。单位和数量不做预算换算。
+- 用户点击“检查并填入表单”后补齐必填项，勾选核对确认，再点击“确认并保存菜谱”，才复用 `createCustomRecipe()`。未知时间保留空白；沿用第一阶段规则，核实为正数后才能保存。创建后的 Recipe 格式、稳定 ID、localStorage key 和 `dinner:adapters-updated` 事件不变。`src/main.js`、`src/data.js`、B/C 业务逻辑无需改动。
+- 图片只在内存和单次请求中处理，不作为菜谱字段入库；不上传到 Files API，不在本站磁盘持久化。`store:false` 不等于提供方零日志承诺。开发服务器仅公开 index、src 静态资源及可选 `team-adapters.js`，拒绝访问密钥、仓库元数据及服务端源码。
+
+第二阶段手动验收：
+1. 未配置密钥时打开导入，显示未配置提示；仍可预览合法图片、手动创建，不出现假识别结果。
+2. 选取/拖入清晰截图或手写照片，检查预览；测试 JPG/PNG/WebP、空文件、伪造后缀、超过 5MB、多文件和手机选择图片。
+3. 配置真实密钥和有图片/结构化输出权限的模型后，点击开始识别，检查上传进度、识别中状态；用模糊图片验证缺失信息留空且有警告，不自动估算时间或用量。
+4. 识别完成时确认菜谱库仍为空；点击填入表单，对照原图逐项核对，验证歧义食材必须手选、未确认/未补齐不能保存。保存后刷新页面，通过 A 的中英文名和食材搜索进入详情。
+5. 识别中取消、关闭或更换图片，确认旧请求不会回填；重新识别成功后仍需主动填入、检查并确认。模拟额度不足、网络断开、无效 JSON、模型拒绝和超时，确认能重试且不产生菜谱。
+6. 验证原图不进入 localStorage；测试新导入菜谱和原有菜谱的编辑、删除、持久化、A 搜索详情与替代品流程。真实浏览器视觉验收及真实提供方识别联调必须单独执行，离线自动测试不能替代。
