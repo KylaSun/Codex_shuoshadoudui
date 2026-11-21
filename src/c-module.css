@@ -1,0 +1,28 @@
+.c-editor-backdrop{z-index:1000;padding:18px;overflow:auto;align-items:center}
+.c-editor-backdrop .modal{position:relative;width:min(100%,650px);max-height:min(88dvh,900px);overflow:auto;overscroll-behavior:contain;background:#fff8ed;color:#32271f}
+.c-editor-backdrop .modal-icon{color:#ad4933}
+.c-editor-backdrop .modal-paint{width:42px;height:42px}
+.c-close{position:absolute;top:14px;right:16px;border:0;background:none;color:inherit;font:inherit;font-size:28px;cursor:pointer}
+.c-editor-backdrop input,.c-editor-backdrop select{font:inherit;color:inherit;accent-color:#ae4933}
+.c-editor-backdrop input[type=number],.c-editor-backdrop select{min-height:42px;padding:8px 10px;border:1px solid #cdb9a6;border-radius:3px;background:#fffcf6}
+.c-editor-backdrop input[type=number]{width:110px;max-width:100%}
+.c-add-pantry,.c-pantry-row,.c-shopping-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #dbc7b0}
+.c-pantry-rows,.c-shopping-rows{max-height:230px;overflow:auto;margin:18px 0}
+.c-pantry-row b,.c-shopping-row span{flex:1;min-width:0}
+.c-pantry-row button{border:0;background:none;color:#a94a35;cursor:pointer}
+.c-add-pantry{flex-wrap:wrap}
+.c-add-pantry label,.c-budget-label{display:flex;align-items:center;gap:8px}
+.c-recipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;max-height:190px;overflow:auto;margin:16px 0;padding:12px;border:1px solid #dbc7b0}
+.c-recipes legend{padding:0 6px;font-weight:700}
+.c-recipes label{display:flex;align-items:start;gap:7px;font-size:14px;line-height:1.4;padding:4px 0;cursor:pointer}
+.c-recipes input,.c-shopping-row input{flex:none;margin-top:3px}
+.c-random-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0}
+.c-random-controls label{display:flex;align-items:center;gap:8px}
+.c-random-message,.c-budget-message{width:100%;margin:0;color:#9b402e;font-size:13px}
+.c-budget-label{font-weight:700;margin:16px 0}
+.c-shopping-row{cursor:pointer}
+.c-shopping-row small{display:block;color:#765d4b;line-height:1.5}
+.c-shopping-row strong{white-space:nowrap}
+.c-total{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:2px solid #a94a35;font-size:18px}
+.c-editor-backdrop .modal-actions{flex-wrap:wrap}
+@media(max-width:600px){.c-editor-backdrop{padding:10px}.c-recipes{grid-template-columns:1fr}.c-add-pantry label{width:100%;justify-content:space-between}.c-add-pantry select{max-width:70%}.c-editor-backdrop .modal-actions>*{flex:1}}

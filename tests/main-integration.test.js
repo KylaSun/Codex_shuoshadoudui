@@ -59,9 +59,9 @@ test('merged A home, search, ingredient details and all five navigation entries 
   assert.match(ui.html(), /超市参考商品/);
   assert.match(ui.html(), /Tesco Long Grain Rice|Tesco|Sainsbury/);
   ui.click({go: 'pantry'});
-  assert.match(ui.html(), /库存编辑属于 C 模块/);
+  assert.match(ui.html(), /厨房功能暂不可用/);
   ui.click({go: 'shopping'});
-  assert.match(ui.html(), /购物单及预算调整属于 C 模块/);
+  assert.match(ui.html(), /购物单暂不可用/);
   ui.click({go: 'custom-recipes'});
   assert.match(ui.html(), /＋ 创建菜谱/);
 });
