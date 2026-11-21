@@ -34,7 +34,7 @@ window.dispatchEvent(new Event('dinner:adapters-updated'));
 - Ingredient: `{id, nameZh, nameEn, aliases?: string[], category?, emoji?}`。
 - Recipe: `{id, nameZh, nameEn?, emoji?, accent?, timeMinutes?, difficulty?, tags?: string[], description?, ingredients: [{ingredientId, amount:number, unit:string}], steps?: string[]}`。
 - Product: `{id, ingredientId, nameEn, supermarket:'Tesco'|'Sainsbury’s', packageSize, priceGBP:number, recordedAt:'YYYY-MM-DD', url}`。
-- Substitution: `{id, recipeId, ingredientId, replacementIngredientId, replacementAmount:number, replacementUnit, flavourNote, equivalent:boolean, technique?}`。
+- Substitution: `{id, recipeId, ingredientId, replacementIngredientId, replacementAmount:number, replacementUnit, flavourNote, equivalent:boolean, suitability?:string, sourceUrls?:string[], technique?}`。
 - Pantry: 数组 `[{ingredientId, amount, unit}]` 或对象 `{[ingredientId]:{amount,unit}}`。
 - BudgetSummary: `{totalGBP:number,label?:string}`（**由 C 计算**）。
 - ShoppingList: `[{ingredientId,nameZh?,amount?,unit?}]`（**由 C 计算/管理**）。
@@ -56,6 +56,11 @@ window.dispatchEvent(new Event('dinner:adapters-updated'));
 4. 打开奶油蘑菇意面 → 将奶酪替代为牛奶：必须先确认味道变化，取消不生效，确认后显示“已选择”，可恢复原食材。
 5. 底部首页/找菜/我的厨房/购物单导航可切换；没有 C 时显示诚实的未接入状态，不显示假预算或假购物单。
 6. 集成 C 后：检查库存减少采购价、替代改变整包数量与金额、超预算时可调整。**这三项不在 A 独立版本内验证**。
+
+## 替代规则展示
+- `equivalent: false` 显示“味道有变化”，不会据此禁用替代选项。
+- 选项和确认弹窗展示 B 提供的 `suitability` 字符串，未提供时显示“未标注”；具体取值待 B 数据契约同步后对齐。
+- `sourceUrls` 可由适配器原样保留。替代比例仍为项目估算，商品价格仍为带记录日期的示例参考价。
 
 ## D 模块：本地自定义菜谱
 
