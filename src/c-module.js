@@ -1,4 +1,5 @@
 import {icon} from './illustrated-icons.js';
+import {recipeArt} from './recipe-art.js';
 
 const STORAGE_KEY = 'tonight-what-c-state-v1';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -109,8 +110,18 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     let rerollOpen = false;
     let rerollReason = '';
     let drawMessage = '';
+    let spinning = false;
+    let spinTimer;
+    let spinResult = null;
 
-    const close = () => overlay.remove();
+    const close = () => { clearTimeout(spinTimer); overlay.remove(); };
+    const spinWheel = () => `<div class="c-spin-stage" aria-hidden="true"><span class="c-spin-burst"></span><span class="c-spin-pointer"></span><span class="c-spin-wheel"><span class="c-spin-wheel-center">饭乡</span></span></div>`;
+    const spinScene = () => `<div class="modal c-spin-scene" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">TONIGHT'S PICK</p><h2 id="c-editor-title">今晚吃什么？</h2>${spinWheel()}<p class="c-spin-caption" role="status">转盘正在选今晚的菜…</p></div>`;
+    const resultScene = () => {
+      const recipe = spinResult.recipe;
+      const art = recipeArt(recipe.id);
+      return `<div class="modal c-spin-result" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">TONIGHT'S PICK · 饭乡推荐</p><div class="c-spin-result-art">${art ? `<img src="${esc(art)}" alt="${esc(recipe.nameZh || recipe.nameEn)}水彩插画">` : `<span>${icon('recipes', 'c-spin-result-icon')}</span>`}</div><div class="c-spin-result-body"><span class="c-spin-result-kicker">今晚就做这道</span><h2 id="c-editor-title">${esc(recipe.nameZh || recipe.nameEn)}</h2><p>按当前预算估算 £${spinResult.costGBP.toFixed(2)}。已加入今晚要做的菜。</p><button type="button" data-spin-continue class="primary">查看购物单 →</button></div></div>`;
+    };
     const matches = (item, query) => {
       const term = query.trim().toLocaleLowerCase();
       return !term || [item.nameZh, item.nameEn, item.region, ...(item.aliases || [])]
@@ -187,13 +198,26 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       const active=documentRef.activeElement;
       const focusAttribute=active?.hasAttribute?.('data-plan-recipe')?'data-plan-recipe':active?.hasAttribute?.('data-shopping-item')?'data-shopping-item':null;
       const focusValue=focusAttribute?active.getAttribute(focusAttribute):null;
-      overlay.innerHTML = kind === 'pantry' ? pantryEditor() : kind === 'blocked' ? blockedEditor() : shoppingEditor();
-      overlay.scrollTop=scroll.overlay;
-      const nextModal=overlay.querySelector('.modal');if(nextModal)nextModal.scrollTop=scroll.modal;
+      overlay.innerHTML = kind === 'pantry' ? pantryEditor() : kind === 'blocked' ? blockedEditor() : spinning ? spinScene() : spinResult ? resultScene() : shoppingEditor();
+      overlay.scrollTop=spinning || spinResult ? 0 : scroll.overlay;
+      const nextModal=overlay.querySelector('.modal');if(nextModal)nextModal.scrollTop=spinning || spinResult ? 0 : scroll.modal;
       const nextRecipes=overlay.querySelector('.c-recipes');if(nextRecipes)nextRecipes.scrollTop=scroll.recipes;
       const nextShopping=overlay.querySelector('.c-shopping-rows');if(nextShopping)nextShopping.scrollTop=scroll.shopping;
       if(focusAttribute){const next=[...overlay.querySelectorAll(`[${focusAttribute}]`)].find(node=>node.getAttribute(focusAttribute)===focusValue);next?.focus({preventScroll:true});}
       updateUnit();
+    };
+    const startSpin = (result, success, failure) => {
+      spinning = true;
+      spinResult = null;
+      drawMessage = '转盘正在选今晚的菜…';
+      paint();
+      spinTimer = setTimeout(() => {
+        if (!overlay.isConnected) return;
+        spinning = false;
+        if (result.ok) { success(result); spinResult = result; }
+        else drawMessage = failure(result);
+        paint();
+      }, 5000);
     };
     paint();
 
@@ -255,6 +279,7 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       const button = event.target.closest('button');
       if (!button) return;
       if (button.hasAttribute('data-close')) { close(); return; }
+      if (button.hasAttribute('data-spin-continue')) { spinResult = null; paint(); return; }
       if (button.hasAttribute('data-pantry-remove')) { draftPantry.splice(Number(button.dataset.pantryRemove), 1); paint(); return; }
       if (button.hasAttribute('data-block-add')) {
         const id = overlay.querySelector('[data-block-select]')?.value;
@@ -280,26 +305,28 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
         return;
       }
       if (button.hasAttribute('data-random-recommend')) {
+        if (spinning) return;
         if (state.lastRecommendationId) { rerollOpen = true; drawMessage = '重抽前请先选择一个原因。'; paint(); return; }
         const result = recommendWithinBudget({budgetGBP: draftBudget});
-        if (!result.ok) { drawMessage = result.closest ? `预算内没有符合的菜；最低可匹配估算 £${result.closest.costGBP.toFixed(2)}。` : '当前菜谱暂无完整商品匹配，无法随机推荐。'; paint(); return; }
-        state.lastRecommendationId = result.recipe.id;
-        draftIds = [...new Set([...draftIds, result.recipe.id])];
-        drawMessage = `已推荐：${result.recipe.nameZh || result.recipe.nameEn} · £${result.costGBP.toFixed(2)}`;
-        paint();
+        startSpin(result, chosen => {
+          state.lastRecommendationId = chosen.recipe.id;
+          draftIds = [...new Set([...draftIds, chosen.recipe.id])];
+          drawMessage = `已推荐：${chosen.recipe.nameZh || chosen.recipe.nameEn} · £${chosen.costGBP.toFixed(2)}`;
+        }, failed => failed.closest ? `预算内没有符合的菜；最低可匹配估算 £${failed.closest.costGBP.toFixed(2)}。` : '当前菜谱暂无完整商品匹配，无法随机推荐。');
         return;
       }
       if (button.hasAttribute('data-confirm-reroll')) {
+        if (spinning) return;
         if (!rerollReason) { drawMessage = '请先选择重抽原因。'; paint(); return; }
         const result = recommendWithinBudget({budgetGBP: draftBudget, excludeRecipeIds: [state.lastRecommendationId]});
-        if (!result.ok) { drawMessage = result.closest ? `没有其他菜符合预算；最低可匹配估算 £${result.closest.costGBP.toFixed(2)}。` : '没有其他菜可匹配预算和商品。'; paint(); return; }
-        state.lastRerollReason = rerollReason;
-        state.lastRecommendationId = result.recipe.id;
-        draftIds = [...new Set([...draftIds, result.recipe.id])];
-        drawMessage = `已按“${rerollReason}”重抽：${result.recipe.nameZh || result.recipe.nameEn} · £${result.costGBP.toFixed(2)}`;
-        rerollOpen = false;
-        rerollReason = '';
-        paint();
+        startSpin(result, chosen => {
+          state.lastRerollReason = rerollReason;
+          state.lastRecommendationId = chosen.recipe.id;
+          draftIds = [...new Set([...draftIds, chosen.recipe.id])];
+          drawMessage = `已按“${rerollReason}”重抽：${chosen.recipe.nameZh || chosen.recipe.nameEn} · £${chosen.costGBP.toFixed(2)}`;
+          rerollOpen = false;
+          rerollReason = '';
+        }, failed => failed.closest ? `没有其他菜符合预算；最低可匹配估算 £${failed.closest.costGBP.toFixed(2)}。` : '没有其他菜可匹配预算和商品。');
         return;
       }
       if (button.hasAttribute('data-raise-budget')) {
