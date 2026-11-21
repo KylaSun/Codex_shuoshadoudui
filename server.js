@@ -77,12 +77,13 @@ export function createAppServer({env = process.env, fetchImpl = fetch} = {}) {
     if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end('Method not allowed'); return; }
     const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
     const rootAsset = ['index.html', 'team-adapters.js'].includes(relative);
-    if (!rootAsset && (!relative.startsWith('src/') || !types[extname(relative)] || relative.split('/').some(part => part.startsWith('.')))) {
+    const publicFolder = relative.startsWith('assets/') ? 'assets' : 'src';
+    if (!rootAsset && (!relative.startsWith(`${publicFolder}/`) || !types[extname(relative)] || relative.split('/').some(part => part.startsWith('.')))) {
       res.writeHead(404).end('Not found'); return;
     }
     try {
       const path = await realpath(resolve(root, relative));
-      if (!path.startsWith(root) || (rootAsset ? path !== resolve(root, relative) : !path.startsWith(resolve(root, 'src') + sep))) {
+      if (!path.startsWith(root) || (rootAsset ? path !== resolve(root, relative) : !path.startsWith(resolve(root, publicFolder) + sep))) {
         res.writeHead(403).end('Forbidden'); return;
       }
       if (!(await stat(path)).isFile()) { res.writeHead(404).end('Not found'); return; }

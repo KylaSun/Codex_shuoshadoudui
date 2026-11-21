@@ -14,7 +14,7 @@ export function getShoppingList(){const getter=adapters().getShoppingList;if(typ
 export function ingredientById(id){return getIngredients().find(x=>x.id===id);}
 export function searchCatalog(raw, type='all'){
  const q=String(raw||'').trim().toLocaleLowerCase();
- const has=(x)=>[x.nameZh,x.nameEn,...(x.aliases||[])].some(s=>String(s||'').toLocaleLowerCase().includes(q));
+ const has=(x)=>[x.nameZh,x.nameEn,x.region,...(x.tags||[]),...(x.aliases||[])].some(s=>String(s||'').toLocaleLowerCase().includes(q));
  const matchedIngredients=getIngredients().filter(has);
  const recipes=type==='ingredient'?[]:getRecipes().filter(r=>!q||has(r)||r.ingredients?.some(x=>matchedIngredients.some(i=>i.id===x.ingredientId)));
  const ingredients=type==='recipe'?[]:matchedIngredients;

@@ -46,7 +46,7 @@ const customDraft = nameZh => ({
 
 test('merged A home, search, ingredient details and all five navigation entries remain available', async () => {
   const ui = await app();
-  assert.match(ui.html(), /今日灵感/);
+  assert.match(ui.html(), /今天想吃的家乡菜/);
   for (const page of ['home', 'search', 'pantry', 'shopping', 'custom-recipes']) {
     assert.ok(ui.html().includes(`data-go="${page}"`));
   }
