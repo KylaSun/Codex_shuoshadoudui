@@ -22,6 +22,16 @@ test('confirmed substitute changes list quantity, matched product and cost',()=>
 test('shopping list merges items and persists selected recipes',()=>{const {c,storage}=fixture();c.setRecipeIds(['rice-bowl','pasta']);const list=c.getShoppingList();assert.equal(list.length,4);assert.ok(list.some(x=>x.ingredientId==='rice'));const restored=fixture(storage).c;assert.deepEqual(restored.getShoppingList().map(x=>x.ingredientId),list.map(x=>x.ingredientId));});
 test('unmatched products are reported rather than assigned invented prices',()=>{const noProducts=createCModule({getRecipes:()=>recipes,getIngredients:()=>ingredients,getProducts:()=>[],getSubstitutions:()=>[],storage:{getItem:()=>null,setItem:()=>{}}});const quote=noProducts.getBudgetSummary('rice-bowl');assert.ok(Number.isNaN(quote.totalGBP));assert.match(quote.label,/暂无匹配商品/);assert.ok(noProducts.getShoppingList().every(x=>x.unmatched));});
 
+test('incomplete recipe budget exposes priced subtotal and missing ingredients',()=>{
+  const {c}=fixture();
+  const incomplete=createCModule({getRecipes:()=>[{id:'mixed',ingredients:[{ingredientId:'egg',amount:2,unit:'个'},{ingredientId:'unknown',amount:10,unit:'g'}]}],getIngredients:()=>ingredients,getProducts:()=>products,storage:{getItem:()=>null,setItem:()=>{}}});
+  const quote=incomplete.getBudgetSummary('mixed');
+  assert.ok(Number.isNaN(quote.totalGBP));
+  assert.equal(quote.knownSubtotalGBP,1.8);
+  assert.deepEqual(quote.missingItems.map(item=>item.ingredientId),['unknown']);
+  assert.equal(c.getBudgetSummary('rice-bowl').knownSubtotalGBP,3.2);
+});
+
 test('budget random recommendation filters unmatched and over-budget meals',()=>{const {c}=fixture();const result=c.recommendWithinBudget({budgetGBP:3.5,random:()=>0});assert.equal(result.ok,true);assert.equal(result.recipe.id,'rice-bowl');const none=c.recommendWithinBudget({budgetGBP:0});assert.equal(none.ok,false);assert.equal(none.reason,'no-recipe-within-budget');});
 
 test('fully stocked ingredients are omitted from the purchase list',()=>{const {c}=fixture();c.setRecipeIds(['rice-bowl']);c.setPantryQuantity('egg',2,'个');assert.equal(c.getShoppingList().some(x=>x.ingredientId==='egg'),false);});
@@ -37,4 +47,19 @@ test('blocked ingredients persist and exclude affected recipes from planning and
   assert.deepEqual(fixture(storage).c.getBlockedIngredientIds(),['egg']);
   c.setBlockedIngredientIds([]);
   assert.deepEqual(c.setRecipeIds(['rice-bowl']),['rice-bowl']);
+});
+
+test('shopping groups show recipes, and deleting a dish or ingredient persists',()=>{
+  const {c,storage}=fixture();
+  c.setRecipeIds(['rice-bowl','pasta']);
+  assert.deepEqual(c.getSelectedRecipeIds(),['rice-bowl','pasta']);
+  assert.deepEqual(c.getShoppingRecipeGroups().map(group=>group.nameZh),['鸡蛋饭','奶油意面']);
+  assert.equal(c.removeShoppingIngredient('egg','个'),true);
+  assert.equal(c.getShoppingList().some(row=>row.ingredientId==='egg'),false);
+  assert.equal(c.getShoppingRecipeGroups()[0].ingredients.some(row=>row.ingredientId==='egg'),false);
+  assert.equal(fixture(storage).c.getShoppingList().some(row=>row.ingredientId==='egg'),false);
+  assert.equal(c.removeShoppingRecipe('rice-bowl'),true);
+  assert.deepEqual(c.getSelectedRecipeIds(),['pasta']);
+  assert.deepEqual(c.getShoppingList().map(row=>row.ingredientId),['pasta','cheese']);
+  assert.equal(c.removeShoppingRecipe('rice-bowl'),false);
 });

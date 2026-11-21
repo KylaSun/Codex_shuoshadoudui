@@ -16,6 +16,7 @@ test('C calculates current B recipes from canonical pack quantities',()=>{
   const incomplete=c.getBudgetSummary('mapo-tofu');
   assert.ok(Number.isNaN(incomplete.totalGBP));
   assert.match(incomplete.label,/部分参考金额，完整预算未知/);
+  assert.ok(incomplete.knownSubtotalGBP>0);
 });
 
 test('C includes every ingredient of a combined B substitution',()=>{

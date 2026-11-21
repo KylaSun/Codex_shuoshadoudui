@@ -78,6 +78,10 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
   function getBudgetSummary(recipeId,selectedSubs={}){const rows=calculate([recipeId],selectedSubs);const missingItems=rows.filter(x=>x.unmatched).map(x=>({ingredientId:x.ingredientId,nameZh:x.nameZh}));const knownSubtotalGBP=sum(rows);if(missingItems.length)return {totalGBP:Number.NaN,knownSubtotalGBP,missingItems,label:`已扣除已有食材；${missingItems.map(x=>x.nameZh).join('、')}暂无匹配商品，以上仅为部分参考金额，完整预算未知`};return {totalGBP:knownSubtotalGBP,knownSubtotalGBP,missingItems:[],label:'已扣除已有食材，按整包参考价估算'};}
   function recommendWithinBudget({budgetGBP=state.budgetGBP,excludeRecipeIds=[],random=Math.random}={}){const options=recipes().filter(recipe=>!hasBlockedIngredient(recipe)).map(recipe=>({recipe,items:calculate([recipe.id],state.substitutions,[])})).map(x=>({...x,costGBP:sum(x.items),unmatched:x.items.some(item=>item.unmatched)}));const feasible=options.filter(x=>!x.unmatched&&x.costGBP<=Number(budgetGBP)&&!excludeRecipeIds.includes(x.recipe.id));if(!feasible.length){const closest=options.filter(x=>!x.unmatched).sort((a,b)=>a.costGBP-b.costGBP)[0]||null;return {ok:false,reason:'no-recipe-within-budget',budgetGBP:Number(budgetGBP),closest:closest?{recipe:closest.recipe,costGBP:closest.costGBP}:null};}const result=feasible[Math.min(feasible.length-1,Math.floor(Math.max(0,Math.min(.999999,random()))*feasible.length))];return {ok:true,...result};}
   function getShoppingList(){return calculate().filter(row=>row.needed>0||row.unmatched).map(row=>({ingredientId:row.ingredientId,nameZh:row.nameZh,amount:row.needed,unit:row.unit,haveAmount:row.have,requiredAmount:row.amount,product:row.product,packageCount:row.packageCount,costGBP:row.costGBP,unmatched:row.unmatched}));}
+  const getSelectedRecipeIds=()=>[...state.recipeIds];
+  function getShoppingRecipeGroups(){return state.recipeIds.map(id=>recipes().find(recipe=>recipe.id===id)).filter(Boolean).map(recipe=>({recipeId:recipe.id,nameZh:recipe.nameZh||recipe.nameEn||recipe.id,ingredients:calculate([recipe.id],{},state.excluded).map(row=>({ingredientId:row.ingredientId,nameZh:row.nameZh,amount:row.amount,unit:row.unit}))}));}
+  function removeShoppingRecipe(recipeId){if(!state.recipeIds.includes(recipeId))return false;state.recipeIds=state.recipeIds.filter(id=>id!==recipeId);const remaining=new Set(calculate(state.recipeIds,{},[]).map(row=>itemKey(row.ingredientId,row.unit)));state.excluded=state.excluded.filter(key=>remaining.has(key));persist();return true;}
+  function removeShoppingIngredient(ingredientId,unit){const key=itemKey(ingredientId,unit);if(!calculate(state.recipeIds,{},[]).some(row=>itemKey(row.ingredientId,row.unit)===key))return false;if(!state.excluded.includes(key))state.excluded.push(key);persist();return true;}
   function selectSubstitution({recipeId,ingredientId,substitutionId,flavourConfirmed}={}){
     const key=selectionKey(recipeId,ingredientId);if(substitutionId===null){delete state.substitutions[key];persist();return true;}
     if(flavourConfirmed!==true)return false;
@@ -119,7 +123,7 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       <button type="button" data-close class="c-close" aria-label="关闭">×</button>
       <div class="modal-icon">${icon('pantry', 'modal-paint')}</div>
       <h2 id="c-editor-title">管理我的厨房</h2>
-      <p>记录已有食材，屏蔽不想吃的食材。设置只保存在这个浏览器。</p>
+      <p>记录已有食材。设置只保存在这个浏览器。</p>
       <div class="c-pantry-rows">${draftPantry.length ? draftPantry.map((row, index) => `<div class="c-pantry-row"><b>${esc(ingredientName(row.ingredientId))}</b><input aria-label="${esc(ingredientName(row.ingredientId))} 数量" type="number" min="0" step="any" data-pantry-index="${index}" value="${esc(row.amount)}"><span>${esc(row.unit)}</span><button type="button" data-pantry-remove="${index}" aria-label="移除 ${esc(ingredientName(row.ingredientId))}">移除</button></div>`).join('') : '<p class="subtle-empty">还没有记录食材。</p>'}</div>
       <form id="c-add-pantry" class="c-add-pantry">
         <label class="c-picker-label">搜索要添加的食材<input type="search" data-pantry-search value="${esc(pantrySearch)}" placeholder="输入中文、英文或别名" autocomplete="off"></label>
@@ -128,13 +132,17 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
         <span class="c-unit" id="c-pantry-unit"></span>
         <button class="outline" type="submit">加入厨房</button>
       </form>
-      <fieldset class="c-blocked"><legend>屏蔽食材</legend>
-        <p>含屏蔽食材的菜不会加入今晚购物单，也不会参与随机推荐。</p>
-        <div class="c-blocked-list">${draftBlocked.length ? draftBlocked.map(id => `<button type="button" data-block-remove="${esc(id)}" aria-label="取消屏蔽 ${esc(ingredientName(id))}">${esc(ingredientName(id))} <span aria-hidden="true">×</span></button>`).join('') : '<span class="c-empty-inline">尚未屏蔽食材</span>'}</div>
-        <label class="c-picker-label">搜索要屏蔽的食材<input type="search" data-block-search value="${esc(blockSearch)}" placeholder="输入中文、英文或别名" autocomplete="off"></label>
-        <div class="c-block-picker"><select data-block-select aria-label="选择要屏蔽的食材">${ingredientOptions(blockSearch, draftBlocked)}</select><button type="button" data-block-add class="outline">屏蔽所选</button></div>
-      </fieldset>
       <div class="modal-actions"><button type="button" data-close class="outline">取消</button><button type="button" data-save-pantry class="primary">保存厨房</button></div>
+    </div>`;
+    const blockedEditor = () => `<div class="modal c-blocked-modal" role="dialog" aria-modal="true" aria-labelledby="c-editor-title">
+      <button type="button" data-close class="c-close" aria-label="关闭">×</button>
+      <div class="modal-icon">${icon('leaf', 'modal-paint')}</div>
+      <h2 id="c-editor-title">屏蔽食材</h2>
+      <p>含屏蔽食材的菜会从找菜结果隐藏，也不能加入购物单或参与随机推荐。</p>
+      <div class="c-blocked-list">${draftBlocked.length ? draftBlocked.map(id => `<button type="button" data-block-remove="${esc(id)}" aria-label="取消屏蔽 ${esc(ingredientName(id))}">${esc(ingredientName(id))} <span aria-hidden="true">×</span></button>`).join('') : '<span class="c-empty-inline">尚未屏蔽食材</span>'}</div>
+      <label class="c-picker-label">搜索要屏蔽的食材<input type="search" data-block-search value="${esc(blockSearch)}" placeholder="输入中文、英文或别名" autocomplete="off"></label>
+      <div class="c-block-picker"><select data-block-select aria-label="选择要屏蔽的食材">${ingredientOptions(blockSearch, draftBlocked)}</select><button type="button" data-block-add class="outline">屏蔽所选</button></div>
+      <div class="modal-actions"><button type="button" data-close class="outline">取消</button><button type="button" data-save-blocked class="primary">保存屏蔽设置</button></div>
     </div>`;
     const shoppingRows = () => calculate(draftIds, state.substitutions, [])
       .filter(row => row.needed > 0 || row.unmatched)
@@ -174,7 +182,17 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       if (unit) unit.textContent = select?.value ? defaultUnit(select.value) : '';
     };
     const paint = () => {
-      overlay.innerHTML = kind === 'pantry' ? pantryEditor() : shoppingEditor();
+      const priorModal=overlay.querySelector('.modal');
+      const scroll={overlay:overlay.scrollTop,modal:priorModal?.scrollTop||0,recipes:overlay.querySelector('.c-recipes')?.scrollTop||0,shopping:overlay.querySelector('.c-shopping-rows')?.scrollTop||0};
+      const active=documentRef.activeElement;
+      const focusAttribute=active?.hasAttribute?.('data-plan-recipe')?'data-plan-recipe':active?.hasAttribute?.('data-shopping-item')?'data-shopping-item':null;
+      const focusValue=focusAttribute?active.getAttribute(focusAttribute):null;
+      overlay.innerHTML = kind === 'pantry' ? pantryEditor() : kind === 'blocked' ? blockedEditor() : shoppingEditor();
+      overlay.scrollTop=scroll.overlay;
+      const nextModal=overlay.querySelector('.modal');if(nextModal)nextModal.scrollTop=scroll.modal;
+      const nextRecipes=overlay.querySelector('.c-recipes');if(nextRecipes)nextRecipes.scrollTop=scroll.recipes;
+      const nextShopping=overlay.querySelector('.c-shopping-rows');if(nextShopping)nextShopping.scrollTop=scroll.shopping;
+      if(focusAttribute){const next=[...overlay.querySelectorAll(`[${focusAttribute}]`)].find(node=>node.getAttribute(focusAttribute)===focusValue);next?.focus({preventScroll:true});}
       updateUnit();
     };
     paint();
@@ -252,6 +270,11 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       }
       if (button.hasAttribute('data-save-pantry')) {
         state.pantry = draftPantry.filter(row => Number(row.amount) > 0);
+        persist();
+        close();
+        return;
+      }
+      if (button.hasAttribute('data-save-blocked')) {
         setBlockedIngredientIds(draftBlocked);
         close();
         return;
@@ -303,5 +326,5 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
     return true;
   }
-  return {getPantry,getBlockedIngredientIds,setBlockedIngredientIds,getBudgetSummary,getShoppingList,getSelectedSubstitutions:()=>({...state.substitutions}),selectSubstitution,recommendWithinBudget,openPantryEditor:()=>openEditor('pantry'),openShoppingEditor:()=>openEditor('shopping'),setPantryQuantity,setRecipeIds,setBudgetGBP,calculateShoppingList:calculate,getBudget:()=>state.budgetGBP};
+  return {getPantry,getBlockedIngredientIds,setBlockedIngredientIds,getBudgetSummary,getShoppingList,getSelectedRecipeIds,getShoppingRecipeGroups,removeShoppingRecipe,removeShoppingIngredient,getSelectedSubstitutions:()=>({...state.substitutions}),selectSubstitution,recommendWithinBudget,openPantryEditor:()=>openEditor('pantry'),openBlockedIngredientsEditor:()=>openEditor('blocked'),openShoppingEditor:()=>openEditor('shopping'),setPantryQuantity,setRecipeIds,setBudgetGBP,calculateShoppingList:calculate,getBudget:()=>state.budgetGBP};
 }

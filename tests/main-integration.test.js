@@ -66,6 +66,74 @@ test('merged A home, search, ingredient details and all five navigation entries 
   assert.match(ui.html(), /＋ 创建菜谱/);
 });
 
+test('shopping switches between recipe groups and ingredients and offers deletion',async()=>{
+  const removed=[];
+  window.DinnerAppAdapters={
+    getShoppingList:()=>[{ingredientId:'egg',nameZh:'鸡蛋',amount:2,unit:'个',costGBP:1.8,product:{supermarket:'Tesco'},packageCount:1}],
+    getShoppingRecipeGroups:()=>[{recipeId:'rice-bowl',nameZh:'鸡蛋饭',ingredients:[{ingredientId:'egg',nameZh:'鸡蛋',amount:2,unit:'个'}]}],
+    removeShoppingRecipe:id=>removed.push(['recipe',id]),
+    removeShoppingIngredient:(id,unit)=>removed.push(['ingredient',id,unit]),
+  };
+  const ui=await app('#shopping');
+  assert.match(ui.html(),/鸡蛋饭/);
+  assert.match(ui.html(),/data-remove-shopping-recipe="rice-bowl"/);
+  ui.click({shoppingView:'ingredient'});
+  assert.ok(!ui.html().includes('鸡蛋饭'));
+  assert.match(ui.html(),/data-remove-shopping-ingredient="egg"/);
+  ui.click({removeShoppingIngredient:'egg',unit:'个'});
+  ui.click({shoppingView:'recipe'});
+  ui.click({removeShoppingRecipe:'rice-bowl'});
+  assert.deepEqual(removed,[['ingredient','egg','个'],['recipe','rice-bowl']]);
+});
+
+test('shopping shows priced subtotal and applies a confirmed recipe substitution',async()=>{
+  let selected=false;
+  const calls=[];
+  window.DinnerAppAdapters={
+    getRecipes:()=>[{id:'dinner',nameZh:'测试晚餐',ingredients:[{ingredientId:'cheese',amount:30,unit:'g'}]}],
+    getIngredients:()=>ingredients,
+    getSubstitutions:()=>[{id:'swap-cheese',recipeId:'dinner',ingredientId:'cheese',replacementIngredientId:'milk',replacementAmount:80,replacementUnit:'ml',flavourNote:'奶味更淡',equivalent:false}],
+    getShoppingRecipeGroups:()=>[{recipeId:'dinner',nameZh:'测试晚餐',ingredients:[{ingredientId:selected?'milk':'cheese',nameZh:selected?'牛奶':'奶酪',amount:selected?80:30,unit:selected?'ml':'g'}]}],
+    getShoppingList:()=>selected?[{ingredientId:'milk',nameZh:'牛奶',amount:80,unit:'ml',costGBP:1.3,product:{supermarket:'Tesco'},packageCount:1}]:[{ingredientId:'egg',nameZh:'鸡蛋',amount:2,unit:'个',costGBP:1.8,product:{supermarket:'Tesco'},packageCount:1},{ingredientId:'cheese',nameZh:'奶酪',amount:30,unit:'g',costGBP:null,unmatched:true}],
+    selectSubstitution:payload=>{calls.push(payload);selected=true;window.dispatchEvent(new Event('dinner:adapters-updated'));return true;},
+  };
+  const ui=await app('#shopping');
+  assert.match(ui.html(),/已匹配商品小计/);
+  assert.match(ui.html(),/£1\.80/);
+  assert.match(ui.html(),/完整金额未知/);
+  ui.click({sub:'swap-cheese',subRecipe:'dinner'});
+  assert.match(ui.html(),/确认这次味道变化/);
+  ui.click({},'data-confirm-sub');
+  assert.deepEqual(calls[0],{recipeId:'dinner',ingredientId:'cheese',substitutionId:'swap-cheese',flavourConfirmed:true});
+  assert.match(ui.html(),/预计采购总金额/);
+  assert.match(ui.html(),/£1\.30/);
+  assert.ok(!ui.html().includes('完整金额未知'));
+});
+
+test('ingredient blocking is offered beside recipe search and hides affected recipes',async()=>{
+  let opened=0;
+  window.DinnerAppAdapters={getBlockedIngredientIds:()=>['egg'],openBlockedIngredientsEditor:()=>{opened++;}};
+  const ui=await app('#search');
+  assert.match(ui.html(),/data-open-blocked/);
+  assert.match(ui.html(),/屏蔽食材（1）/);
+  assert.ok(!ui.html().includes('data-recipe="tomato-egg"'));
+  assert.ok(ui.html().includes('data-recipe="chicken-rice"'));
+  ui.click({},'data-open-blocked');
+  assert.equal(opened,1);
+});
+
+test('home shows a shopping tip for selected ingredients without a priced substitute',async()=>{
+  window.DinnerAppAdapters={
+    getShoppingList:()=>[{ingredientId:'sichuan_pepper',nameZh:'花椒',amount:2,unit:'g',costGBP:null,unmatched:true}],
+    getShoppingRecipeGroups:()=>[{recipeId:'mapo-tofu',nameZh:'麻婆豆腐饭',ingredients:[{ingredientId:'sichuan_pepper',nameZh:'花椒',amount:2,unit:'g'}]}],
+    getSubstitutions:()=>[],
+  };
+  const ui=await app('#home');
+  assert.match(ui.html(),/购物提醒/);
+  assert.match(ui.html(),/花椒暂无经过菜谱校对的可计价替代/);
+  assert.match(ui.html(),/查看购物单 →/);
+});
+
 test('merged A search and details refresh after D creation, edit and deletion without replacing B adapter', async () => {
   const getter = () => recipes;
   window.DinnerAppAdapters = {getRecipes: getter};
