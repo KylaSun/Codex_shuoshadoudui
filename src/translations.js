@@ -44,6 +44,7 @@ export const uiEnglish = {
 '明确把预算提高至至少':'Raise budget to at least','（不含未匹配商品；完整金额仍未知）':' (excludes unmatched products; full cost remains unknown)',
 '项暂无匹配商品；仍会保留在清单，金额不计入小计，完整金额未知。':' item(s) have no matched product. They remain on the list but are excluded from the subtotal; the full cost is unknown.',
 '今晚吃什么？':'What’s for dinner?','转盘正在选今晚的菜…':'Spinning to choose tonight’s dish…','今晚就做这道':'Tonight’s pick','饭乡推荐':'Fanxiang recommends',
+'第三方音轨，仅供非商业演示；版权归原权利人。':'Third-party audio for a non-commercial demo; rights remain with the copyright owner.',
 '不满意？再抽一次':'Not happy? Draw again','这道不合心意？':'Not the right dish?','先选一个理由，再为今晚抽一道。':'Pick a reason before drawing again.','为什么想换一道？':'Why change dishes?','保留这道菜':'Keep this dish','查看购物单':'View shopping list','的超市商品':' supermarket products',
 '按当前预算估算':'Estimated with your current budget:','。已加入今晚要做的菜。':'. Added to tonight’s dishes.',
 '重抽原因':'Reason for another draw','请选择':'Please choose','不想吃这道菜':'I don’t feel like this dish','缺少关键食材':'I’m missing a key ingredient','想换一种口味':'I want a different flavour','其他':'Other',

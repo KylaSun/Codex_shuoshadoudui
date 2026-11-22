@@ -138,7 +138,7 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     };
     const close = () => { clearTimeout(spinTimer); stopSpinAudio(); overlay.remove(); };
     const spinWheel = () => `<div class="c-spin-stage" aria-hidden="true"><span class="c-spin-burst"></span><span class="c-spin-pointer"></span><span class="c-spin-wheel"><span class="c-spin-wheel-center">饭乡</span></span></div>`;
-    const spinScene = () => `<div class="modal c-spin-scene" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">TONIGHT'S PICK</p><h2 id="c-editor-title">今晚吃什么？</h2>${spinWheel()}<p class="c-spin-caption" role="status">转盘正在选今晚的菜…</p></div>`;
+    const spinScene = () => `<div class="modal c-spin-scene" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">TONIGHT'S PICK</p><h2 id="c-editor-title">今晚吃什么？</h2>${spinWheel()}<p class="c-spin-caption" role="status">转盘正在选今晚的菜…</p><p class="c-spin-credit">第三方音轨，仅供非商业演示；版权归原权利人。</p></div>`;
     const resultScene = () => {
       const recipe = spinResult.recipe;
       const art = recipeArt(recipe.id);

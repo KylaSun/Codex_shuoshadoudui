@@ -45,6 +45,7 @@
 .c-spin-eyebrow{margin:0;color:#a34530!important;font-size:11px!important;font-weight:700;letter-spacing:2px}
 .c-spin-scene h2{margin:6px 0 14px;font-family:serif;font-size:34px}
 .c-spin-caption{margin:12px 0 0;color:#8a4933!important;font-size:15px!important}
+.c-spin-credit{margin:8px 0 0;color:#8a6e5e!important;font-size:11px!important;line-height:1.4!important}
 .c-editor-backdrop .c-spin-result{width:min(100%,480px);padding:0;overflow:hidden;border:1px solid #d7bfa6;animation:c-result-enter 240ms cubic-bezier(.23,1,.32,1) both}
 .c-spin-result>.c-spin-eyebrow{position:absolute;z-index:1;top:18px;left:20px;padding:5px 8px;background:#fff4e5e8}
 .c-spin-result-art{height:250px;background:#e8d5b9;overflow:hidden}
