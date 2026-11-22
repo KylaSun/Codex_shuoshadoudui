@@ -40,7 +40,7 @@ export const uiEnglish = {
 '购物单暂不可用。':'Shopping list is currently unavailable.','编辑今晚购物单':'Plan tonight’s shopping','今晚要做的菜':'Tonight’s dishes',
 '勾选要加入清单的菜；取消单项可以调整采购内容。金额按整包参考价计算。':'Select dishes for your list. Uncheck individual ingredients to adjust purchases. Estimates use whole-pack reference prices.',
 '预算随机推荐一道':'Pick a dish within budget','预算 (£)':'Budget (£)','先选择一道菜，购物项会自动生成。':'Choose a dish to generate shopping items.','已匹配商品参考价':'Matched products estimate','保存购物单':'Save shopping list',
-'整包':'packs','需购':'To buy','无匹配商品':'No matched product','预算':'Budget','已匹配商品小计超过当前预算；请调整清单，或明确提高预算。':'The matched subtotal exceeds your budget. Adjust your list or explicitly raise your budget.',
+  '整包':'packs','需购':'To buy','无匹配商品':'No matched product','预算':'Budget','已匹配商品小计超过当前预算；保存时将预算提高至':'The matched subtotal exceeds your budget. Saving will raise it to','提高预算并保存至购物单':'Raise budget and save shopping list',
 '明确把预算提高至至少':'Raise budget to at least','（不含未匹配商品；完整金额仍未知）':' (excludes unmatched products; full cost remains unknown)',
 '项暂无匹配商品；仍会保留在清单，金额不计入小计，完整金额未知。':' item(s) have no matched product. They remain on the list but are excluded from the subtotal; the full cost is unknown.',
 '今晚吃什么？':'What’s for dinner?','转盘正在选今晚的菜…':'Spinning to choose tonight’s dish…','今晚就做这道':'Tonight’s pick','饭乡推荐':'Fanxiang recommends',

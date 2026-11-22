@@ -25,7 +25,7 @@ function convertBase(value,unit){const info=unitInfo(unit);return info?value/inf
 
 export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProducts=()=>[],getSubstitutions=()=>[],storage=globalThis.localStorage,documentRef=globalThis.document,dispatch=()=>{}}={}){
   let saved={};try{saved=JSON.parse(storage?.getItem(STORAGE_KEY)||'{}')||{};}catch{}
-  const state={pantry:Array.isArray(saved.pantry)?saved.pantry:[],recipeIds:Array.isArray(saved.recipeIds)?saved.recipeIds:[],blockedIngredients:Array.isArray(saved.blockedIngredients)?saved.blockedIngredients:[],budgetGBP:Number.isFinite(Number(saved.budgetGBP))?Number(saved.budgetGBP):5,excluded:Array.isArray(saved.excluded)?saved.excluded:[],substitutions:saved.substitutions&&typeof saved.substitutions==='object'?saved.substitutions:{},lastRecommendationId:null,lastRerollReason:null};
+  const state={pantry:Array.isArray(saved.pantry)?saved.pantry:[],recipeIds:Array.isArray(saved.recipeIds)?saved.recipeIds:[],blockedIngredients:Array.isArray(saved.blockedIngredients)?saved.blockedIngredients:[],budgetGBP:Number.isFinite(Number(saved.budgetGBP))?Number(saved.budgetGBP):5,excluded:Array.isArray(saved.excluded)?saved.excluded:[],substitutions:saved.substitutions&&typeof saved.substitutions==='object'?saved.substitutions:{}};
   const recipes=()=>{try{return getRecipes()||[]}catch{return []}};
   const ingredients=()=>{try{return getIngredients()||[]}catch{return []}};
   const products=()=>{try{return getProducts()||[]}catch{return []}};
@@ -113,6 +113,7 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     let spinning = false;
     let spinTimer;
     let spinResult = null;
+    let lastDrawId = null;
 
     const close = () => { clearTimeout(spinTimer); overlay.remove(); };
     const spinWheel = () => `<div class="c-spin-stage" aria-hidden="true"><span class="c-spin-burst"></span><span class="c-spin-pointer"></span><span class="c-spin-wheel"><span class="c-spin-wheel-center">饭乡</span></span></div>`;
@@ -177,14 +178,14 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
           ${recipeOptions()}
         </div>
         </fieldset>
-        <div class="c-random-controls"><button type="button" data-random-recommend class="outline">${state.lastRecommendationId ? '不满意？再抽一次' : '预算随机推荐一道'}</button>
+        <div class="c-random-controls"><button type="button" data-random-recommend class="outline">${lastDrawId ? '不满意？再抽一次' : '预算随机推荐一道'}</button>
           <p class="c-random-message" role="status">${esc(drawMessage)}</p>
         </div>
         <label class="c-budget-label">预算 (£)<input id="c-budget-input" type="number" min="0" step="0.01" value="${draftBudget.toFixed(2)}"></label>
         <div class="c-shopping-rows">${rows.length ? rows.map(row => `<label class="c-shopping-row"><input type="checkbox" data-shopping-item="${esc(itemKey(row.ingredientId, row.unit))}" ${row.excluded ? '' : 'checked'}><span><b>${esc(row.nameZh)}</b><small>需购 ${esc(row.needed)} ${esc(row.unit)}${row.product ? ` · ${esc(row.product.supermarket)} 整包 × ${esc(row.packageCount)}` : ' · 无匹配商品'}</small></span><strong>${row.costGBP === null ? '—' : '£' + row.costGBP.toFixed(2)}</strong></label>`).join('') : '<p class="subtle-empty">先选择一道菜，购物项会自动生成。</p>'}</div>
         <div class="c-total"><span>已匹配商品参考价</span><strong>£${total.toFixed(2)}</strong></div>
-        <div class="c-budget-message" role="status">${[rows.some(row => row.unmatched && !row.excluded) ? `有 ${rows.filter(row => row.unmatched && !row.excluded).length} 项暂无匹配商品；仍会保留在清单，金额不计入小计，完整金额未知。` : '', over ? '已匹配商品小计超过当前预算；请调整清单，或明确提高预算。' : ''].filter(Boolean).join(' ')}</div>
-        <div class="modal-actions">${over ? `<button type="button" data-raise-budget class="outline">明确把预算提高至至少 £${total.toFixed(2)}${rows.some(row => row.unmatched && !row.excluded) ? '（不含未匹配商品；完整金额仍未知）' : ''}</button>` : ''}<button type="button" data-close class="outline">取消</button><button type="button" data-save-shopping class="primary" ${over ? 'disabled' : ''}>保存购物单</button></div>
+        <div class="c-budget-message" role="status">${[rows.some(row => row.unmatched && !row.excluded) ? `有 ${rows.filter(row => row.unmatched && !row.excluded).length} 项暂无匹配商品；仍会保留在清单，金额不计入小计，完整金额未知。` : '', over ? `已匹配商品小计超过当前预算；保存时将预算提高至 £${total.toFixed(2)}。` : ''].filter(Boolean).join(' ')}</div>
+        <div class="modal-actions"><button type="button" data-close class="outline">取消</button><button type="button" ${over ? 'data-raise-and-save-shopping' : 'data-save-shopping'} class="primary">${over ? '提高预算并保存至购物单' : '保存购物单'}</button></div>
       </div>`;
     };
     const updateUnit = () => {
@@ -308,10 +309,10 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       }
       if (button.hasAttribute('data-random-recommend')) {
         if (spinning) return;
-        if (state.lastRecommendationId) { rerollOpen = true; drawMessage = ''; paint(); return; }
+        if (lastDrawId) { rerollOpen = true; drawMessage = ''; paint(); return; }
         const result = recommendWithinBudget({budgetGBP: draftBudget, excludeRecipeIds: draftIds});
         startSpin(result, chosen => {
-          state.lastRecommendationId = chosen.recipe.id;
+          lastDrawId = chosen.recipe.id;
           draftIds = [...new Set([...draftIds, chosen.recipe.id])];
           drawMessage = `已推荐：${chosen.recipe.nameZh || chosen.recipe.nameEn} · £${chosen.costGBP.toFixed(2)}`;
         }, failed => failed.closest ? `预算内没有符合的菜；最低可匹配估算 £${failed.closest.costGBP.toFixed(2)}。` : '当前菜谱暂无完整商品匹配，无法随机推荐。');
@@ -322,9 +323,8 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
         if (!rerollReason) { drawMessage = '请先选择重抽原因。'; paint(); return; }
         const result = recommendWithinBudget({budgetGBP: draftBudget, excludeRecipeIds: draftIds});
         startSpin(result, chosen => {
-          const previousId = state.lastRecommendationId;
-          state.lastRerollReason = rerollReason;
-          state.lastRecommendationId = chosen.recipe.id;
+          const previousId = lastDrawId;
+          lastDrawId = chosen.recipe.id;
           draftIds = [...new Set([...draftIds.filter(id => id !== previousId), chosen.recipe.id])];
           drawMessage = `已按“${rerollReason}”重抽：${chosen.recipe.nameZh || chosen.recipe.nameEn} · £${chosen.costGBP.toFixed(2)}`;
           rerollOpen = false;
@@ -332,19 +332,14 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
         }, failed => failed.closest ? `没有其他菜符合预算；最低可匹配估算 £${failed.closest.costGBP.toFixed(2)}。` : '没有其他菜可匹配预算和商品。');
         return;
       }
-      if (button.hasAttribute('data-raise-budget')) {
-        draftBudget = sum(shoppingRows().filter(row => !row.excluded));
-        state.budgetGBP = draftBudget;
-        persist();
-        paint();
-        return;
-      }
-      if (button.hasAttribute('data-save-shopping')) {
+      if (button.hasAttribute('data-save-shopping') || button.hasAttribute('data-raise-and-save-shopping')) {
         const total = sum(shoppingRows().filter(row => !row.excluded));
-        if (total > draftBudget) {
+        const raisingBudget = button.hasAttribute('data-raise-and-save-shopping');
+        if (total > draftBudget && !raisingBudget) {
           overlay.querySelector('.c-budget-message').textContent = '请先调整购物单或明确提高预算。';
           return;
         }
+        if (raisingBudget) draftBudget = Math.max(draftBudget, total);
         state.recipeIds = draftIds.filter(id => !hasBlockedIngredient(recipes().find(recipe => recipe.id === id)));
         state.excluded = [...draftExcluded];
         state.budgetGBP = draftBudget;
