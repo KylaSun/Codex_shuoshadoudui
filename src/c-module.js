@@ -114,8 +114,29 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     let spinTimer;
     let spinResult = null;
     let lastDrawId = null;
+    let spinAudio = null;
 
-    const close = () => { clearTimeout(spinTimer); overlay.remove(); };
+    const stopSpinAudio = () => {
+      if (!spinAudio) return;
+      spinAudio.pause();
+      spinAudio.currentTime = 0;
+      spinAudio.remove();
+      spinAudio = null;
+    };
+    const playSpinAudio = () => {
+      stopSpinAudio();
+      if (!globalThis.Audio) return;
+      const audio = new Audio('./assets/haoyunlai.mp4');
+      audio.dataset.spinBgm = '';
+      audio.hidden = true;
+      audio.playbackRate = 2;
+      audio.loop = true;
+      audio.volume = 0.8;
+      overlay.append(audio);
+      spinAudio = audio;
+      Promise.resolve(audio.play()).catch(() => { if (spinAudio === audio) stopSpinAudio(); });
+    };
+    const close = () => { clearTimeout(spinTimer); stopSpinAudio(); overlay.remove(); };
     const spinWheel = () => `<div class="c-spin-stage" aria-hidden="true"><span class="c-spin-burst"></span><span class="c-spin-pointer"></span><span class="c-spin-wheel"><span class="c-spin-wheel-center">饭乡</span></span></div>`;
     const spinScene = () => `<div class="modal c-spin-scene" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">TONIGHT'S PICK</p><h2 id="c-editor-title">今晚吃什么？</h2>${spinWheel()}<p class="c-spin-caption" role="status">转盘正在选今晚的菜…</p></div>`;
     const resultScene = () => {
@@ -212,8 +233,10 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       spinResult = null;
       drawMessage = '转盘正在选今晚的菜…';
       paint();
+      playSpinAudio();
       spinTimer = setTimeout(() => {
         if (!overlay.isConnected) return;
+        stopSpinAudio();
         spinning = false;
         if (result.ok) { success(result); spinResult = result; }
         else drawMessage = failure(result);
