@@ -120,8 +120,9 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     const resultScene = () => {
       const recipe = spinResult.recipe;
       const art = recipeArt(recipe.id);
-      return `<div class="modal c-spin-result" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">TONIGHT'S PICK · 饭乡推荐</p><div class="c-spin-result-art">${art ? `<img src="${esc(art)}" alt="${esc(recipe.nameZh || recipe.nameEn)}水彩插画">` : `<span>${icon('recipes', 'c-spin-result-icon')}</span>`}</div><div class="c-spin-result-body"><span class="c-spin-result-kicker">今晚就做这道</span><h2 id="c-editor-title">${esc(recipe.nameZh || recipe.nameEn)}</h2><p>按当前预算估算 £${spinResult.costGBP.toFixed(2)}。已加入今晚要做的菜。</p><button type="button" data-spin-continue class="primary">查看购物单 →</button></div></div>`;
+      return `<div class="modal c-spin-result" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">TONIGHT'S PICK · 饭乡推荐</p><div class="c-spin-result-art">${art ? `<img src="${esc(art)}" alt="${esc(recipe.nameZh || recipe.nameEn)}水彩插画">` : `<span>${icon('recipes', 'c-spin-result-icon')}</span>`}</div><div class="c-spin-result-body"><span class="c-spin-result-kicker">今晚就做这道</span><h2 id="c-editor-title">${esc(recipe.nameZh || recipe.nameEn)}</h2><p>按当前预算估算 £${spinResult.costGBP.toFixed(2)}。已加入今晚要做的菜。</p><button type="button" data-spin-continue class="primary">查看购物单 →</button><button type="button" data-spin-reroll class="outline">不满意？再抽一次</button></div></div>`;
     };
+    const rerollScene = () => `<div class="modal c-reroll-scene" role="dialog" aria-modal="true" aria-labelledby="c-editor-title"><button type="button" data-close class="c-close" aria-label="关闭">×</button><p class="c-spin-eyebrow">ONE MORE CHANCE · 饭乡</p><div class="c-reroll-mark" aria-hidden="true">再</div><h2 id="c-editor-title">这道不合心意？</h2><p>先选一个理由，再为今晚抽一道。</p><fieldset class="c-reroll-reasons"><legend>为什么想换一道？</legend>${['不想吃这道菜','缺少关键食材','想换一种口味','其他'].map((reason,index)=>`<label><input type="radio" name="reroll-reason" value="${esc(reason)}" ${rerollReason===reason?'checked':''}><span class="c-reroll-number">0${index+1}</span><span>${reason}</span></label>`).join('')}</fieldset>${drawMessage&&drawMessage!=='重抽前请先选择一个原因。'?`<p class="c-random-message" role="status">${esc(drawMessage)}</p>`:''}<div class="c-reroll-actions"><button type="button" data-cancel-reroll class="outline">保留这道菜</button><button type="button" data-confirm-reroll class="primary" ${rerollReason?'':'disabled'}>确认理由并重抽 →</button></div></div>`;
     const matches = (item, query) => {
       const term = query.trim().toLocaleLowerCase();
       return !term || [item.nameZh, item.nameEn, item.region, ...(item.aliases || [])]
@@ -176,8 +177,7 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
           ${recipeOptions()}
         </div>
         </fieldset>
-        <div class="c-random-controls"><button type="button" data-random-recommend class="outline">预算随机推荐一道</button>
-          ${rerollOpen ? `<label>重抽原因<select data-reroll-reason><option value="">请选择</option>${['不想吃这道菜', '缺少关键食材', '想换一种口味', '其他'].map(value => `<option ${rerollReason === value ? 'selected' : ''} value="${esc(value)}">${esc(value)}</option>`).join('')}</select></label><button type="button" data-confirm-reroll class="secondary">确认原因并重抽</button>` : ''}
+        <div class="c-random-controls"><button type="button" data-random-recommend class="outline">${state.lastRecommendationId ? '不满意？再抽一次' : '预算随机推荐一道'}</button>
           <p class="c-random-message" role="status">${esc(drawMessage)}</p>
         </div>
         <label class="c-budget-label">预算 (£)<input id="c-budget-input" type="number" min="0" step="0.01" value="${draftBudget.toFixed(2)}"></label>
@@ -198,9 +198,9 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       const active=documentRef.activeElement;
       const focusAttribute=active?.hasAttribute?.('data-plan-recipe')?'data-plan-recipe':active?.hasAttribute?.('data-shopping-item')?'data-shopping-item':null;
       const focusValue=focusAttribute?active.getAttribute(focusAttribute):null;
-      overlay.innerHTML = kind === 'pantry' ? pantryEditor() : kind === 'blocked' ? blockedEditor() : spinning ? spinScene() : spinResult ? resultScene() : shoppingEditor();
-      overlay.scrollTop=spinning || spinResult ? 0 : scroll.overlay;
-      const nextModal=overlay.querySelector('.modal');if(nextModal)nextModal.scrollTop=spinning || spinResult ? 0 : scroll.modal;
+      overlay.innerHTML = kind === 'pantry' ? pantryEditor() : kind === 'blocked' ? blockedEditor() : spinning ? spinScene() : spinResult ? resultScene() : rerollOpen ? rerollScene() : shoppingEditor();
+      overlay.scrollTop=spinning || spinResult || rerollOpen ? 0 : scroll.overlay;
+      const nextModal=overlay.querySelector('.modal');if(nextModal)nextModal.scrollTop=spinning || spinResult || rerollOpen ? 0 : scroll.modal;
       const nextRecipes=overlay.querySelector('.c-recipes');if(nextRecipes)nextRecipes.scrollTop=scroll.recipes;
       const nextShopping=overlay.querySelector('.c-shopping-rows');if(nextShopping)nextShopping.scrollTop=scroll.shopping;
       if(focusAttribute){const next=[...overlay.querySelectorAll(`[${focusAttribute}]`)].find(node=>node.getAttribute(focusAttribute)===focusValue);next?.focus({preventScroll:true});}
@@ -246,7 +246,7 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
     overlay.addEventListener('change', event => {
       const target = event.target;
       if (target.matches('[name="ingredientId"]')) updateUnit();
-      if (target.matches('[data-reroll-reason]')) rerollReason = target.value;
+      if (target.matches('[name="reroll-reason"]')) { rerollReason = target.value; overlay.querySelector('[data-confirm-reroll]').disabled = false; }
       if (target.matches('[data-plan-recipe]')) {
         draftIds = target.checked ? [...new Set([...draftIds, target.dataset.planRecipe])] : draftIds.filter(id => id !== target.dataset.planRecipe);
         paint();
@@ -280,6 +280,8 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       if (!button) return;
       if (button.hasAttribute('data-close')) { close(); return; }
       if (button.hasAttribute('data-spin-continue')) { spinResult = null; paint(); return; }
+      if (button.hasAttribute('data-spin-reroll')) { spinResult = null; rerollOpen = true; drawMessage = ''; paint(); return; }
+      if (button.hasAttribute('data-cancel-reroll')) { rerollOpen = false; rerollReason = ''; drawMessage = ''; paint(); return; }
       if (button.hasAttribute('data-pantry-remove')) { draftPantry.splice(Number(button.dataset.pantryRemove), 1); paint(); return; }
       if (button.hasAttribute('data-block-add')) {
         const id = overlay.querySelector('[data-block-select]')?.value;
@@ -306,8 +308,8 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       }
       if (button.hasAttribute('data-random-recommend')) {
         if (spinning) return;
-        if (state.lastRecommendationId) { rerollOpen = true; drawMessage = '重抽前请先选择一个原因。'; paint(); return; }
-        const result = recommendWithinBudget({budgetGBP: draftBudget});
+        if (state.lastRecommendationId) { rerollOpen = true; drawMessage = ''; paint(); return; }
+        const result = recommendWithinBudget({budgetGBP: draftBudget, excludeRecipeIds: draftIds});
         startSpin(result, chosen => {
           state.lastRecommendationId = chosen.recipe.id;
           draftIds = [...new Set([...draftIds, chosen.recipe.id])];
@@ -318,11 +320,12 @@ export function createCModule({getRecipes=()=>[],getIngredients=()=>[],getProduc
       if (button.hasAttribute('data-confirm-reroll')) {
         if (spinning) return;
         if (!rerollReason) { drawMessage = '请先选择重抽原因。'; paint(); return; }
-        const result = recommendWithinBudget({budgetGBP: draftBudget, excludeRecipeIds: [state.lastRecommendationId]});
+        const result = recommendWithinBudget({budgetGBP: draftBudget, excludeRecipeIds: draftIds});
         startSpin(result, chosen => {
+          const previousId = state.lastRecommendationId;
           state.lastRerollReason = rerollReason;
           state.lastRecommendationId = chosen.recipe.id;
-          draftIds = [...new Set([...draftIds, chosen.recipe.id])];
+          draftIds = [...new Set([...draftIds.filter(id => id !== previousId), chosen.recipe.id])];
           drawMessage = `已按“${rerollReason}”重抽：${chosen.recipe.nameZh || chosen.recipe.nameEn} · £${chosen.costGBP.toFixed(2)}`;
           rerollOpen = false;
           rerollReason = '';

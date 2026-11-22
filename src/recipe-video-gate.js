@@ -1,22 +1,24 @@
-const KEY = 'fanxiang.recipe-video.v1';
+const KEY = 'fanxiang.recipe-video.v2';
 
 export function createViewCounter(storage) {
   let saved;
   try { saved = JSON.parse(storage?.getItem(KEY) || 'null'); } catch {}
-  let ids = new Set(Array.isArray(saved?.ids) ? saved.ids.filter(x => typeof x === 'string').slice(0, 3) : []);
+  let views = Number.isInteger(saved?.views) ? Math.max(0, Math.min(2, saved.views)) : 0;
   let pending = saved?.pending === true;
   let previous = typeof saved?.previous === 'string' ? saved.previous : null;
-  const persist = () => { try { storage?.setItem(KEY, JSON.stringify({ids: [...ids], pending, previous})); } catch {} };
+  const persist = () => { try { storage?.setItem(KEY, JSON.stringify({views, pending, previous})); } catch {} };
   return {
     visit(page, id) {
       const current = page === 'recipe' && id ? id : null;
-      if (previous && current !== previous && ids.size >= 3) pending = true;
-      if (!pending && current) ids.add(current);
+      if (!pending && current && current !== previous) {
+        if (views >= 2) pending = true;
+        else views += 1;
+      }
       previous = current;
       persist();
       return pending;
     },
-    complete() { ids = new Set(); pending = false; previous = null; persist(); },
+    complete() { views = 0; pending = false; previous = null; persist(); },
   };
 }
 
@@ -33,7 +35,7 @@ export function createRecipeVideoGate(root) {
     overlay.className = 'recipe-video-backdrop';
     overlay.innerHTML = `<section class="recipe-video-dialog" role="dialog" aria-modal="true" aria-labelledby="recipe-video-title" tabindex="-1">
       <span class="recipe-video-label">饭乡 · 视频时间</span>
-      <h2 id="recipe-video-title">看了三道菜，休息一下吧</h2>
+      <h2 id="recipe-video-title">看了两道菜，休息一下吧</h2>
       <p>完整观看这段视频后，即可继续浏览菜谱。</p>
       <video playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-label="必看视频" src="./assets/recipe-break.mp4"></video>
       <p class="recipe-video-status" role="status" aria-live="polite">点击下方按钮开始播放</p>

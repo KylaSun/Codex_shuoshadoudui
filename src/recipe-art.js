@@ -50,4 +50,4 @@ const files = {
   'cola-chicken-wings': '47.webp',
 };
 
-export const recipeArt = id => files[id] ? `/assets/recipe-art/${files[id]}` : null;
+export const recipeArt = id => files[id] ? new URL(`../assets/recipe-art/${files[id]}`, import.meta.url).href : null;

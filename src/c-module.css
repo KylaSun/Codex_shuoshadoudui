@@ -56,12 +56,27 @@
 .c-spin-result-body h2{margin:8px 0 6px;color:#32271f;font-family:serif;font-size:32px}
 .c-spin-result-body p{margin:0 0 18px;color:#765d4b!important}
 .c-spin-result-body button{width:100%;border-radius:3px;background:#ad4933}
+.c-spin-result-body .outline{margin-top:9px;background:transparent;color:#8e3d2b;border:1px solid #bc866f}
+.c-editor-backdrop .c-reroll-scene{width:min(100%,480px);padding:28px;background:#fff8ed;border:1px solid #d7bfa6;animation:c-result-enter 240ms cubic-bezier(.23,1,.32,1) both}
+.c-reroll-mark{display:grid;place-items:center;width:66px;height:66px;margin:20px 0 12px;background:#ba4d35;color:#fff7e8;font-family:serif;font-size:32px;transform:rotate(-6deg)}
+.c-reroll-scene h2{margin:0 0 5px;color:#32271f;font-family:serif;font-size:30px}
+.c-reroll-scene>p:not(.c-spin-eyebrow){margin:0 0 18px;color:#765d4b}
+.c-reroll-reasons{display:grid;gap:8px;margin:0;padding:0;border:0}
+.c-reroll-reasons legend{margin-bottom:10px;color:#6f5546;font-size:13px;font-weight:700}
+.c-reroll-reasons label{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #d9c5af;background:#f8ebd9;cursor:pointer}
+.c-reroll-reasons label:has(input:checked){border-color:#a94a35;background:#f0d9c3;box-shadow:inset 4px 0 #a94a35}
+.c-reroll-reasons input{width:17px;height:17px;margin:0}
+.c-reroll-number{color:#a94a35;font-family:serif;font-size:19px}
+.c-reroll-actions{display:flex;gap:10px;margin-top:18px}
+.c-reroll-actions button{flex:1;min-width:0;border-radius:3px}
+.c-reroll-actions .primary{background:#ad4933}
+.c-reroll-actions .primary:disabled{opacity:.55;cursor:not-allowed}
 @keyframes c-result-enter{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes c-result-art{from{opacity:.5;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
 @keyframes c-spin-wheel{0%{transform:rotate(0deg)}100%{transform:rotate(2520deg)}}
 @keyframes c-spin-burst{from{transform:scale(.92);opacity:.25}to{transform:scale(1.14);opacity:.65}}
 @keyframes c-spin-pointer{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
-@media(prefers-reduced-motion:reduce){.c-spin-wheel,.c-spin-burst,.c-spin-pointer,.c-spin-result,.c-spin-result-art img{animation:none}.c-spin-stage{background:#f5dcc0}}
+@media(prefers-reduced-motion:reduce){.c-spin-wheel,.c-spin-burst,.c-spin-pointer,.c-spin-result,.c-reroll-scene,.c-spin-result-art img{animation:none}.c-spin-stage{background:#f5dcc0}}
 .c-budget-label{font-weight:700;margin:16px 0}
 .c-shopping-row{cursor:pointer}
 .c-shopping-row small{display:block;color:#765d4b;line-height:1.5}

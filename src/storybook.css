@@ -142,6 +142,7 @@ input,textarea {caret-color:var(--color-primary)}
 .sub-option small {color:var(--color-text-secondary)}
 .sub-option.picked {border-color:var(--color-primary);background:#f2ddca}
 .reset-sub {color:var(--color-primary)}
+.sub-product-link{align-self:flex-start;border:0;background:none;padding:5px 0;color:var(--color-primary-dark);font:inherit;font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .steps li {border-color:var(--color-border);color:var(--color-text-secondary);font-size:14px;line-height:1.8}
 .steps li:before {border-radius:2px;background:var(--color-primary);color:white}
 .integration-note {border-color:var(--color-border);border-radius:2px;background:#f1e6d6;color:var(--color-text-secondary)}
@@ -249,6 +250,8 @@ input,textarea {caret-color:var(--color-primary)}
 .shopping-ingredient{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:15px 4px;border-bottom:1px solid var(--color-border)}
 .shopping-ingredient>div{display:flex;flex-direction:column;gap:5px;min-width:0}
 .shopping-ingredient b{font-family:var(--font-title);font-size:18px}
+.shopping-ingredient .shopping-ingredient-link{align-self:flex-start;font-family:var(--font-title);font-size:18px;text-align:left}
+.shopping-recipe-ingredient-link{border:0;background:none;padding:0;color:var(--color-primary-dark);font:inherit;text-align:left;text-decoration:underline;text-underline-offset:3px}
 .shopping-ingredient small{color:var(--color-text-secondary);font-size:12px;line-height:1.5}
 .shopping-page .budget-result{display:flex;align-items:start;flex-direction:column;gap:5px;margin:0 0 8px;border:1px solid var(--color-border);background:var(--color-surface)}
 .shopping-budget small{color:var(--color-primary-dark);font-size:12px;font-weight:700}
